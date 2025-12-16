@@ -1,7 +1,7 @@
 """
 FINALIS CONTRACT PROCESSING ENGINE
-Python implementation - 100% deterministic, zero errors
-VERSION 2.0 - All bugs fixed + validations
+Python implementation - Testing
+VERSION 2.0 
 """
 
 from typing import Dict, List, Optional, Any
@@ -46,10 +46,26 @@ class FinalisEngine:
             raise ValueError(
                 f"success_fees must be positive, got: {success_fees}")
 
-        if external_retainer < 0:  # NUEVO (opcional)
+
+        if external_retainer < 0:
             raise ValueError(
                 f"external_retainer cannot be negative, got: {external_retainer}"
             )
+
+        # Validate external retainer type
+        has_external_retainer = new_deal.get('has_external_retainer', False)
+        if has_external_retainer:
+            is_deducted = new_deal.get('is_external_retainer_deducted')
+            if is_deducted is None:
+                raise ValueError(
+                    "is_external_retainer_deducted is required when has_external_retainer=True"
+                )
+
+            # Validate that external_retainer amount is provided
+            if external_retainer <= 0:
+                raise ValueError(
+                    f"external_retainer must be positive when has_external_retainer=True, got: {external_retainer}"
+                )
 
         # Validate state
         current_credit = Decimal(str(state.get('current_credit', 0)))
@@ -265,7 +281,19 @@ class FinalisEngine:
         # Convert to Decimal for precise calculations
         success_fees = Decimal(str(new_deal['success_fees']))
         external_retainer = Decimal(str(new_deal.get('external_retainer', 0)))
-        total_for_calculations = success_fees + external_retainer
+        has_external_retainer = new_deal.get('has_external_retainer', False)
+        is_external_retainer_deducted = new_deal.get('is_external_retainer_deducted', True)
+
+        # Calculate total based on retainer type
+        if has_external_retainer and is_external_retainer_deducted:
+            # TYPE 1: Retainer is part of success fee (deducted)
+            total_for_calculations = success_fees + external_retainer
+        elif has_external_retainer and not is_external_retainer_deducted:
+            # TYPE 2: Retainer is standalone (not part of success fee)
+            total_for_calculations = success_fees  # Ignore external retainer for calculations
+        else:
+            # No external retainer
+            total_for_calculations = success_fees
 
         current_credit = Decimal(str(state['current_credit']))
         current_debt = Decimal(str(state['current_debt']))
@@ -410,6 +438,7 @@ class FinalisEngine:
                 "deal_name": new_deal['deal_name'],
                 "success_fees": self.to_money(success_fees),
                 "external_retainer": self.to_money(external_retainer),
+                "external_retainer_deducted": is_external_retainer_deducted if has_external_retainer else None,
                 "total_deal_value": self.to_money(total_for_calculations),
                 "deal_date": new_deal['deal_date']
             },
