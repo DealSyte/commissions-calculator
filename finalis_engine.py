@@ -412,32 +412,37 @@ class FinalisEngine:
 
             if implied_total <= remaining_arr:
                 # All implied goes to ARR (not Finalis yet)
+                payg_arr_contribution = implied_total
                 finalis_commissions_before_cap = Decimal('0')
                 new_commissions_mode = False
                 entered_commissions_mode = False
             elif payg_accumulated >= arr:
                 # ARR already covered - all implied becomes Finalis commissions
+                payg_arr_contribution = Decimal('0')
                 finalis_commissions_before_cap = implied_total
                 new_commissions_mode = True
                 entered_commissions_mode = False
             else:
                 # Partial: some to ARR, rest to Finalis
+                payg_arr_contribution = remaining_arr
                 finalis_commissions_before_cap = implied_total - remaining_arr
                 new_commissions_mode = True
-                entered_commissions_mode = True  # Just entered commissions mode
-
+                entered_commissions_mode = True
         elif is_in_commissions_mode:
-            # CASE 1: Already in commissions mode
+            # CASE 1: Already in commissions mode (non-PAYG)
+            payg_arr_contribution = Decimal('0')
             finalis_commissions_before_cap = implied_total
             new_commissions_mode = True
             entered_commissions_mode = False
         elif contract_fully_prepaid:
-            # CASE 2: Became fully prepaid NOW
+            # CASE 2: Became fully prepaid NOW (non-PAYG)
+            payg_arr_contribution = Decimal('0')
             finalis_commissions_before_cap = implied_remaining_after_advance
             new_commissions_mode = True
             entered_commissions_mode = True
         else:
-            # CASE 3: Not fully prepaid
+            # CASE 3: Not fully prepaid (non-PAYG)
+            payg_arr_contribution = Decimal('0')
             finalis_commissions_before_cap = Decimal('0')
             new_commissions_mode = False
             entered_commissions_mode = False
@@ -453,10 +458,11 @@ class FinalisEngine:
 
         # STEP 8: Calculate Net Payout
         net_payout = self.calculate_net_payout(success_fees, debt_collected,
-                                               finra_fee, distribution_fee,
-                                               sourcing_fee,
-                                               advance_fees_created,
-                                               finalis_commissions)
+               finra_fee, distribution_fee,
+               sourcing_fee,
+               advance_fees_created,
+               finalis_commissions,
+               payg_arr_contribution)  
 
         # STEP 9: Construct Updated State
         updated_accumulated = accumulated_before + total_for_calculations
@@ -539,50 +545,23 @@ class FinalisEngine:
         # Add PAYG tracking if applicable
         if is_payg:
             arr = Decimal(str(contract.get('annual_subscription', 0)))
-            payg_commissions_paid = Decimal(
-                str(state.get('payg_commissions_accumulated',
-                              0))) + finalis_commissions
-
-            # Determine how much is ARR Commissions vs Finalis Commissions
-            if payg_commissions_paid <= arr:
-                # All commissions are still covering ARR
-                arr_commissions = finalis_commissions
-                finalis_commissions_excess = Decimal('0')
-            else:
-                # Some commissions exceed ARR
-                previous_paid = Decimal(
-                    str(state.get('payg_commissions_accumulated', 0)))
-                if previous_paid >= arr:
-                    # Already covered ARR completely - all is excess
-                    arr_commissions = Decimal('0')
-                    finalis_commissions_excess = finalis_commissions
-                else:
-                    # Partially covering ARR, rest is excess
-                    remaining_arr = arr - previous_paid
-                    arr_commissions = min(finalis_commissions, remaining_arr)
-                    finalis_commissions_excess = finalis_commissions - arr_commissions
+            # NEW: Accumulate ARR contribution, not just finalis_commissions
+            payg_total_accumulated = Decimal(
+                str(state.get('payg_commissions_accumulated', 0))) + payg_arr_contribution + finalis_commissions
 
             result['payg_tracking'] = {
-                "arr_target":
-                self.to_money(arr),
-                "commissions_accumulated":
-                self.to_money(payg_commissions_paid),
-                "remaining_to_cover_arr":
-                self.to_money(max(Decimal('0'), arr - payg_commissions_paid)),
-                "arr_coverage_percentage":
-                round(
-                    float(
-                        (payg_commissions_paid / arr * 100)) if arr > 0 else 0,
-                    2),
-                "arr_commissions":
-                self.to_money(arr_commissions),
-                "finalis_commissions_excess":
-                self.to_money(finalis_commissions_excess)
+                "arr_target": self.to_money(arr),
+                "arr_contribution_this_deal": self.to_money(payg_arr_contribution),
+                "finalis_commissions_this_deal": self.to_money(finalis_commissions),
+                "commissions_accumulated": self.to_money(payg_total_accumulated),
+                "remaining_to_cover_arr": self.to_money(max(Decimal('0'), arr - payg_total_accumulated)),
+                "arr_coverage_percentage": round(
+                    float((payg_total_accumulated / arr * 100)) if arr > 0 else 0, 2),
             }
 
-            result['updated_contract_state'][
-                'payg_commissions_accumulated'] = self.to_money(
-                    payg_commissions_paid)
+            result['updated_contract_state']['payg_commissions_accumulated'] = self.to_money(payg_total_accumulated)
+
+            
 
         # NEW: If deferred_schedule exists, update it
         if state.get('deferred_schedule'):
@@ -842,10 +821,11 @@ class FinalisEngine:
                              debt_collected: Decimal, finra_fee: Decimal,
                              distribution_fee: Decimal, sourcing_fee: Decimal,
                              advance_fees: Decimal,
-                             finalis_commissions: Decimal) -> Decimal:
+                             finalis_commissions: Decimal,
+                             payg_arr_contribution: Decimal = Decimal('0')) -> Decimal:
         """
         STEP 8: Calculate net payout to client.
-        IMPLIED is NEVER deducted (it was absorbed by credit or became advance/commissions).
+        For PAYG: Also deducts the ARR contribution (implied that goes toward annual subscription)
         """
         net_payout = success_fees
         net_payout -= debt_collected
@@ -854,7 +834,8 @@ class FinalisEngine:
         net_payout -= sourcing_fee
         net_payout -= advance_fees
         net_payout -= finalis_commissions
-
+        net_payout -= payg_arr_contribution  # NEW: Deduct PAYG ARR contribution
+    
         return net_payout.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
 
