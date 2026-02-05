@@ -397,7 +397,8 @@
             position: relative;
         }
 
-        .subscription-fee-entry .remove-btn {
+        .subscription-fee-entry .remove-btn,
+        .lehman-tier-entry .remove-btn {
             position: absolute;
             top: 4px;
             right: 4px;
@@ -410,13 +411,32 @@
             line-height: 1;
         }
 
-        .subscription-fee-entry .remove-btn:hover {
+        .subscription-fee-entry .remove-btn:hover,
+        .lehman-tier-entry .remove-btn:hover {
             background: rgba(211, 47, 47, 0.1);
             border-radius: 50%;
         }
 
-        .subscription-fee-entry .form-row {
+        .subscription-fee-entry .form-row,
+        .lehman-tier-entry .form-row {
             margin-bottom: 8px;
+        }
+
+        .lehman-tier-entry .form-row {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .lehman-tier-entry {
+            background: #F5F5F5;
+            border-radius: 4px;
+            padding: 12px;
+            padding-top: 16px;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .lehman-tier-entry .form-row:last-child {
+            margin-bottom: 0;
         }
 
         .subscription-fee-entry .form-row:last-child {
@@ -552,16 +572,128 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="rate_type">Rate Type</label>
-                                <select id="rate_type">
+                                <select id="rate_type" onchange="toggleRateFields()">
                                     <option value="fixed">Fixed Rate</option>
                                     <option value="lehman">Lehman Tiers</option>
                                 </select>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group" id="fixed-rate-section">
                                 <label for="fixed_rate">Fixed Rate (%)</label>
                                 <input type="number" id="fixed_rate" value="5" min="0" max="100" step="0.01">
                             </div>
                         </div>
+                        
+                        <!-- Lehman Tiers Section (hidden by default) -->
+                        <div id="lehman_tiers_section" style="display: none;">
+                            <div class="section-title" style="font-size: 13px; margin-top: 8px;">
+                                Lehman Tiers
+                                <button type="button" class="btn-add-sub" onclick="addLehmanTier()">
+                                    <span class="material-icons" style="font-size: 18px;">add</span>
+                                </button>
+                            </div>
+                            <div id="lehman-tiers-container">
+                                <!-- Pre-populated standard Lehman tiers (5-4-3-2-1%) -->
+                                <div class="lehman-tier-entry">
+                                    <button type="button" class="remove-btn" onclick="removeLehmanTier(this)">
+                                        <span class="material-icons">close</span>
+                                    </button>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Lower ($M)</label>
+                                            <input type="number" class="tier-lower" value="0" min="0" step="0.1" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Upper ($M)</label>
+                                            <input type="number" class="tier-upper" value="1" min="0" step="0.1">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Rate (%)</label>
+                                            <input type="number" class="tier-rate" value="5" min="0" max="100" step="0.1" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="lehman-tier-entry">
+                                    <button type="button" class="remove-btn" onclick="removeLehmanTier(this)">
+                                        <span class="material-icons">close</span>
+                                    </button>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Lower ($M)</label>
+                                            <input type="number" class="tier-lower" value="1" min="0" step="0.1" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Upper ($M)</label>
+                                            <input type="number" class="tier-upper" value="2" min="0" step="0.1">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Rate (%)</label>
+                                            <input type="number" class="tier-rate" value="4" min="0" max="100" step="0.1" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="lehman-tier-entry">
+                                    <button type="button" class="remove-btn" onclick="removeLehmanTier(this)">
+                                        <span class="material-icons">close</span>
+                                    </button>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Lower ($M)</label>
+                                            <input type="number" class="tier-lower" value="2" min="0" step="0.1" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Upper ($M)</label>
+                                            <input type="number" class="tier-upper" value="3" min="0" step="0.1">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Rate (%)</label>
+                                            <input type="number" class="tier-rate" value="3" min="0" max="100" step="0.1" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="lehman-tier-entry">
+                                    <button type="button" class="remove-btn" onclick="removeLehmanTier(this)">
+                                        <span class="material-icons">close</span>
+                                    </button>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Lower ($M)</label>
+                                            <input type="number" class="tier-lower" value="3" min="0" step="0.1" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Upper ($M)</label>
+                                            <input type="number" class="tier-upper" value="4" min="0" step="0.1">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Rate (%)</label>
+                                            <input type="number" class="tier-rate" value="2" min="0" max="100" step="0.1" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="lehman-tier-entry">
+                                    <button type="button" class="remove-btn" onclick="removeLehmanTier(this)">
+                                        <span class="material-icons">close</span>
+                                    </button>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Lower ($M)</label>
+                                            <input type="number" class="tier-lower" value="4" min="0" step="0.1" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Upper ($M)</label>
+                                            <input type="number" class="tier-upper" placeholder="∞" min="0" step="0.1">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Rate (%)</label>
+                                            <input type="number" class="tier-rate" value="1" min="0" max="100" step="0.1" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+                                Standard 5-4-3-2-1% scale. Edit or add tiers as needed.
+                            </p>
+                        </div>
+                        
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="accumulated_success_fees">Accumulated Fees ($)</label>
@@ -578,7 +710,7 @@
                                 <select id="cost_cap_type">
                                     <option value="none">None</option>
                                     <option value="annual">Annual</option>
-                                    <option value="lifetime">Lifetime</option>
+                                    <option value="total">Lifetime</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -765,6 +897,17 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Raw JSON Response -->
+                    <div class="results-section">
+                        <div class="section-title collapsible-header" onclick="toggleSection(this)">
+                            Raw JSON Response
+                            <span class="material-icons">expand_more</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <pre id="raw-json-response" style="background: #263238; color: #AABBC3; padding: 12px; border-radius: 4px; font-size: 11px; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; max-height: 400px; overflow-y: auto;"></pre>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -848,11 +991,6 @@
             container.appendChild(entry);
         }
 
-        function removeSubscriptionFee(id) {
-            const entry = document.getElementById(`sub-fee-${id}`);
-            if (entry) entry.remove();
-        }
-
         function getSubscriptionFees() {
             const entries = document.querySelectorAll('.subscription-fee-entry');
             return Array.from(entries).map(entry => ({
@@ -861,6 +999,74 @@
                 amount_due: parseFloat(entry.querySelector('.sub-amount-due').value) || 0,
                 amount_paid: parseFloat(entry.querySelector('.sub-amount-paid').value) || 0
             }));
+        }
+
+        function toggleRateFields() {
+            const rateType = document.getElementById('rate_type').value;
+            const fixedRateSection = document.getElementById('fixed-rate-section');
+            const lehmanTiersSection = document.getElementById('lehman_tiers_section');
+            
+            if (rateType === 'lehman') {
+                fixedRateSection.style.display = 'none';
+                lehmanTiersSection.style.display = 'block';
+            } else {
+                fixedRateSection.style.display = 'block';
+                lehmanTiersSection.style.display = 'none';
+            }
+        }
+
+        function addLehmanTier() {
+            const container = document.getElementById('lehman-tiers-container');
+            const entries = container.querySelectorAll('.lehman-tier-entry');
+            const lastEntry = entries[entries.length - 1];
+            let nextLower = 0;
+            if (lastEntry) {
+                const upperVal = lastEntry.querySelector('.tier-upper').value;
+                nextLower = upperVal === '' ? 0 : parseFloat(upperVal);
+            }
+            
+            const entry = document.createElement('div');
+            entry.className = 'lehman-tier-entry';
+            entry.innerHTML = `
+                <button type="button" class="remove-btn" onclick="removeLehmanTier(this)">
+                    <span class="material-icons">close</span>
+                </button>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Lower Bound ($M)</label>
+                        <input type="number" class="tier-lower" value="${nextLower}" min="0" step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Upper Bound ($M)</label>
+                        <input type="number" class="tier-upper" placeholder="∞ if blank" min="0" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>Rate (%)</label>
+                        <input type="number" class="tier-rate" value="1" min="0" max="100" step="0.1" required>
+                    </div>
+                </div>
+            `;
+            container.appendChild(entry);
+        }
+
+        function removeLehmanTier(button) {
+            const entry = button.closest('.lehman-tier-entry');
+            if (entry) entry.remove();
+        }
+
+        function getLehmanTiers() {
+            const entries = document.querySelectorAll('.lehman-tier-entry');
+            return Array.from(entries).map(entry => {
+                const lower = parseFloat(entry.querySelector('.tier-lower').value) || 0;
+                const upperVal = entry.querySelector('.tier-upper').value;
+                const upper = upperVal === '' ? null : parseFloat(upperVal);
+                const rate = (parseFloat(entry.querySelector('.tier-rate').value) || 0) / 100;
+                return {
+                    lower_bound: lower * 1000000,
+                    upper_bound: upper === null ? null : upper * 1000000,
+                    rate: rate
+                };
+            });
         }
 
         function displayResults(data) {
@@ -890,6 +1096,9 @@
             document.getElementById('final_debt').textContent = formatCurrency(state.current_debt);
             document.getElementById('commissions_mode').textContent = state.is_in_commissions_mode ? 'Yes' : 'No';
 
+            // Raw JSON response
+            document.getElementById('raw-json-response').textContent = JSON.stringify(data, null, 2);
+
             document.getElementById('results-container').classList.add('show');
         }
 
@@ -901,11 +1110,13 @@
             // Build cost cap fields
             const costCapType = document.getElementById('cost_cap_type').value;
             const costCapAmount = parseFloat(document.getElementById('cost_cap_amount').value) || 0;
+            const rateType = document.getElementById('rate_type').value;
 
             const payload = {
                 contract: {
-                    rate_type: document.getElementById('rate_type').value,
-                    fixed_rate: parseFloat(document.getElementById('fixed_rate').value) / 100,
+                    rate_type: rateType,
+                    fixed_rate: rateType === 'fixed' ? parseFloat(document.getElementById('fixed_rate').value) / 100 : undefined,
+                    lehman_tiers: rateType === 'lehman' ? getLehmanTiers() : undefined,
                     accumulated_success_fees_before_this_deal: parseFloat(document.getElementById('accumulated_success_fees').value) || 0,
                     contract_start_date: document.getElementById('contract_start_date').value,
                     is_pay_as_you_go: document.getElementById('is_pay_as_you_go').checked,
@@ -935,10 +1146,16 @@
                 }
             };
 
-            // Remove undefined cost cap fields
+            // Remove undefined contract fields
             if (payload.contract.cost_cap_type === undefined) {
                 delete payload.contract.cost_cap_type;
                 delete payload.contract.cost_cap_amount;
+            }
+            if (payload.contract.fixed_rate === undefined) {
+                delete payload.contract.fixed_rate;
+            }
+            if (payload.contract.lehman_tiers === undefined) {
+                delete payload.contract.lehman_tiers;
             }
 
             try {
@@ -951,6 +1168,12 @@
                 });
 
                 const data = await response.json();
+
+                // Log request and response for debugging
+                console.log('=== API Request ===');
+                console.log(JSON.stringify(payload, null, 2));
+                console.log('=== API Response ===');
+                console.log(JSON.stringify(data, null, 2));
 
                 if (!response.ok) {
                     throw new Error(data.error || 'Calculation failed');
