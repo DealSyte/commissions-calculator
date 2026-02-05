@@ -32,20 +32,43 @@ gunicorn main:app --bind 0.0.0.0:8080
 
 A minimalist web calculator is available for internal testing purposes:
 
+**macOS/Linux:**
 ```bash
-# Start the server
+# First time setup (if not already done)
+python3 -m venv .venv
 source .venv/bin/activate
+pip install -r requirements.txt
+
+# Start the server
+python main.py
+```
+
+**Windows (PowerShell):**
+```powershell
+# First time setup (if not already done)
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+
+# Start the server
 python main.py
 ```
 
 Then open http://localhost:8080 in your browser.
 
+**Windows Troubleshooting:**
+- If you see "cannot be loaded because running scripts is disabled", run: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
+- If port 8080 is blocked, check Windows Firewall settings or try a different port: `$env:PORT=3000; python main.py`
+- Verify Flask installed: `pip list | findstr Flask`
+
 > **Note:** This UI is deliberately minimalist and intended for internal testing only. For production integrations, use the `/process_deal` API endpoint directly.
 
 The web interface provides:
 - Full form inputs for deal, contract, and state parameters
+- Lehman tier configuration with pre-populated 5-4-3-2-1% standard tiers
 - Dynamic subscription fee management
 - Real-time calculation results with collapsible sections
+- Raw JSON response viewer for debugging
 - Mobile-responsive Material Design layout
 
 ## API Endpoint

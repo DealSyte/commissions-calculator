@@ -144,9 +144,17 @@ class OutputBuilder:
             },
             
             # Subscription breakdown
+            "subscription_balance_before": {
+                "value": to_money(self._total_subscription_owed_before(ctx)),
+                "description": f"Total future subscription fees remaining to be prepaid before this deal. This determines whether remaining implied cost becomes advance fees or Finalis commissions."
+            },
             "advance_fees_created": {
                 "value": to_money(subscription.advance_fees_created),
-                "description": f"Portion of remaining implied cost applied to prepay future subscription invoices. Reduces what the member owes on upcoming subscription payments."
+                "description": self._advance_fees_description(ctx)
+            },
+            "subscription_balance_after": {
+                "value": to_money(self._total_subscription_owed_after(ctx)),
+                "description": f"Remaining subscription balance after this deal. When this reaches $0, the contract is fully prepaid and enters commissions mode."
             },
             "implied_after_subscription": {
                 "value": to_money(subscription.implied_after_subscription),
@@ -283,3 +291,36 @@ class OutputBuilder:
             "remaining_to_cover_arr": to_money(tracking.remaining_to_cover_arr),
             "arr_coverage_percentage": tracking.arr_coverage_percentage
         }
+
+    def _total_subscription_owed_before(self, ctx: ProcessingContext) -> Decimal:
+        """Calculate total subscription fees owed before this deal."""
+        return sum(p.amount_owed for p in ctx.initial_state.future_payments)
+
+    def _total_subscription_owed_after(self, ctx: ProcessingContext) -> Decimal:
+        """Calculate total subscription fees remaining after this deal."""
+        total = Decimal('0')
+        for payment in ctx.subscription.updated_payments:
+            remaining = Decimal(str(payment.get('remaining', 0)))
+            total += remaining
+        return total
+
+    def _advance_fees_description(self, ctx: ProcessingContext) -> str:
+        """Generate dynamic description for advance fees based on subscription state."""
+        subscription = ctx.subscription
+        credit = ctx.credit
+        
+        implied_after_credit = to_money(credit.implied_after_credit)
+        advance_created = to_money(subscription.advance_fees_created)
+        sub_balance_before = to_money(self._total_subscription_owed_before(ctx))
+        sub_balance_after = to_money(self._total_subscription_owed_after(ctx))
+        
+        if sub_balance_before == 0:
+            return f"No future subscription fees to prepay. Contract already fully prepaid - remaining implied cost ({_fmt(implied_after_credit)}) becomes Finalis commission."
+        
+        if advance_created == 0:
+            return f"No advance fees created. Either no remaining implied cost after credit, or credit fully covered the broker-dealer cost."
+        
+        if sub_balance_after == 0:
+            return f"Remaining implied cost ({_fmt(implied_after_credit)}) fully prepaid the remaining subscription balance ({_fmt(sub_balance_before)}). Contract is now fully prepaid. Any excess ({_fmt(to_money(subscription.implied_after_subscription))}) becomes Finalis commission."
+        
+        return f"Subscription balance of {_fmt(sub_balance_before)} partially prepaid. Applied {_fmt(advance_created)} from remaining implied cost ({_fmt(implied_after_credit)}). Remaining subscription: {_fmt(sub_balance_after)}."

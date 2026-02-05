@@ -159,7 +159,7 @@ class TestPaygCommissions:
         assert result.entered_commissions_mode == True
 
     def test_exactly_covers_arr(self, calculator):
-        """Deal exactly covers remaining ARR."""
+        """Deal exactly covers remaining ARR - enters commissions mode."""
         ctx = self._make_payg_context(
             implied_total=5000,
             arr=10000,
@@ -169,7 +169,9 @@ class TestPaygCommissions:
         
         assert result.payg_arr_contribution == Decimal('5000')
         assert result.finalis_commissions == Decimal('0')
-        assert result.new_commissions_mode == False  # No commissions generated
+        # ARR fully covered = entered commissions mode (even with no excess)
+        assert result.new_commissions_mode == True
+        assert result.entered_commissions_mode == True
 
     def test_arr_over_covered(self, calculator):
         """Accumulated already exceeds ARR."""

@@ -858,20 +858,31 @@
                         </div>
                     </div>
 
-                    <!-- Commission -->
+                    <!-- Subscription & Commission -->
                     <div class="results-section">
                         <div class="section-title collapsible-header" onclick="toggleSection(this)">
-                            Commission
+                            Subscription & Commission
                             <span class="material-icons">expand_more</span>
                         </div>
                         <div class="collapsible-content">
+                            <div class="result-row">
+                                <span class="result-label">Subscription Balance (Before)</span>
+                                <span class="result-value currency" id="subscription_before">$0.00</span>
+                            </div>
                             <div class="result-row">
                                 <span class="result-label">Advance Fees Created</span>
                                 <span class="result-value currency" id="advance_fees">$0.00</span>
                             </div>
                             <div class="result-row">
+                                <span class="result-label">Subscription Balance (After)</span>
+                                <span class="result-value currency" id="subscription_after">$0.00</span>
+                            </div>
+                            <div class="result-row">
                                 <span class="result-label">Finalis Commission</span>
                                 <span class="result-value currency" id="finalis_commission">$0.00</span>
+                            </div>
+                            <div class="result-row" id="advance_fees_note_row" style="display: none;">
+                                <span class="result-description" id="advance_fees_note" style="width: 100%;"></span>
                             </div>
                         </div>
                     </div>
@@ -1087,9 +1098,22 @@
             document.getElementById('credit_used').textContent = formatCurrency(calc.credit_used_for_implied.value);
             document.getElementById('implied_after_credit').textContent = formatCurrency(calc.implied_after_credit.value);
 
-            // Commission
+            // Subscription & Commission
+            document.getElementById('subscription_before').textContent = formatCurrency(calc.subscription_balance_before.value);
             document.getElementById('advance_fees').textContent = formatCurrency(calc.advance_fees_created.value);
+            document.getElementById('subscription_after').textContent = formatCurrency(calc.subscription_balance_after.value);
             document.getElementById('finalis_commission').textContent = formatCurrency(calc.finalis_commissions.value);
+            
+            // Show advance fees explanation note
+            const advanceFeesNote = calc.advance_fees_created.description;
+            const noteRow = document.getElementById('advance_fees_note_row');
+            const noteEl = document.getElementById('advance_fees_note');
+            if (advanceFeesNote && calc.implied_after_credit.value > 0) {
+                noteEl.textContent = advanceFeesNote;
+                noteRow.style.display = 'block';
+            } else {
+                noteRow.style.display = 'none';
+            }
 
             // Updated state
             document.getElementById('final_credit').textContent = formatCurrency(state.current_credit);

@@ -95,8 +95,8 @@ class CommissionCalculator:
                 payg_arr_contribution=Decimal('0')
             )
 
-        if implied_total <= remaining_arr:
-            # All implied goes to ARR (no commission yet)
+        if implied_total < remaining_arr:
+            # All implied goes to ARR (not enough to cover yet)
             return CommissionCalculation(
                 finalis_commissions_before_cap=Decimal('0'),
                 finalis_commissions=Decimal('0'),
@@ -105,7 +105,8 @@ class CommissionCalculator:
                 payg_arr_contribution=implied_total
             )
 
-        # Partial: some to ARR, rest to commission
+        # Implied covers remaining ARR (exactly or with excess)
+        # Either way, we've entered commissions mode
         commission_amount = implied_total - remaining_arr
         
         return CommissionCalculation(

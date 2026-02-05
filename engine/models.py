@@ -85,10 +85,23 @@ class Deal:
 
     @property
     def total_for_calculations(self) -> Decimal:
-        """Calculate the total value used for fee calculations."""
+        """Calculate the total value used for fee calculations.
+        
+        When retainer is deducted (include_retainer_in_fees=True), all fees
+        are calculated on the total including retainer for consistency.
+        """
         if self.has_external_retainer and self.include_retainer_in_fees:
             return self.success_fees + self.external_retainer
         return self.success_fees
+
+    @property
+    def amount_for_dist_sourcing(self) -> Decimal:
+        """Calculate the amount used for distribution/sourcing fee calculations.
+        
+        When retainer is deducted, dist/sourcing use the same total as all other fees
+        for consistency (Lehman, FINRA, etc. all use total_for_calculations).
+        """
+        return self.total_for_calculations
 
     @classmethod
     def from_dict(cls, data: dict) -> 'Deal':
@@ -102,7 +115,10 @@ class Deal:
             is_deal_exempt=data['is_deal_exempt'],
             external_retainer=Decimal(str(data.get('external_retainer', 0))),
             has_external_retainer=data.get('has_external_retainer', False),
-            include_retainer_in_fees=data.get('include_retainer_in_fees', True),
+            # Support both 'include_retainer_in_fees' and legacy 'is_external_retainer_deducted'
+            # When retainer is "deducted" from client payout, it means it's included in fee calculations
+            include_retainer_in_fees=data.get('include_retainer_in_fees', 
+                                               data.get('is_external_retainer_deducted', True)),
             has_finra_fee=data.get('has_finra_fee', True),
             has_preferred_rate=data.get('has_preferred_rate', False),
             preferred_rate=Decimal(str(preferred)) if preferred is not None else None
@@ -243,10 +259,15 @@ class CommissionCalculation:
 
 @dataclass
 class PaygTracking:
-    """PAYG-specific tracking information."""
+    """PAYG-specific tracking information.
+    
+    Note: finalis_commissions_this_deal represents the TOTAL amount Finalis
+    collected from this deal (including both ARR contribution and excess).
+    To calculate excess-only, subtract arr_contribution_this_deal.
+    """
     arr_target: Decimal = Decimal('0')
     arr_contribution_this_deal: Decimal = Decimal('0')
-    finalis_commissions_this_deal: Decimal = Decimal('0')
+    finalis_commissions_this_deal: Decimal = Decimal('0')  # Total to Finalis (ARR + excess)
     commissions_accumulated: Decimal = Decimal('0')
     remaining_to_cover_arr: Decimal = Decimal('0')
     arr_coverage_percentage: float = 0.0

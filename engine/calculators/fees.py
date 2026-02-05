@@ -28,11 +28,12 @@ class FeeCalculator:
         """Calculate all fees and return FeeCalculation result."""
         deal = ctx.deal
         amount = deal.total_for_calculations
+        dist_sourcing_amount = deal.amount_for_dist_sourcing
 
         return FeeCalculation(
             finra_fee=self._calculate_finra(amount, deal.has_finra_fee),
-            distribution_fee=self._calculate_distribution(amount, deal.is_distribution_fee),
-            sourcing_fee=self._calculate_sourcing(amount, deal.is_sourcing_fee),
+            distribution_fee=self._calculate_distribution(dist_sourcing_amount, deal.is_distribution_fee),
+            sourcing_fee=self._calculate_sourcing(dist_sourcing_amount, deal.is_sourcing_fee),
             implied_total=self._calculate_implied(ctx)
         )
 
