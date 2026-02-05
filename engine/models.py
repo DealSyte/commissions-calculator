@@ -261,13 +261,13 @@ class CommissionCalculation:
 class PaygTracking:
     """PAYG-specific tracking information.
     
-    Note: finalis_commissions_this_deal represents the TOTAL amount Finalis
-    collected from this deal (including both ARR contribution and excess).
-    To calculate excess-only, subtract arr_contribution_this_deal.
+    Note: finalis_commissions_this_deal represents EXCESS commissions only
+    (after ARR is covered). It does NOT include arr_contribution_this_deal.
+    To calculate total Finalis charge, ADD arr_contribution_this_deal.
     """
     arr_target: Decimal = Decimal('0')
     arr_contribution_this_deal: Decimal = Decimal('0')
-    finalis_commissions_this_deal: Decimal = Decimal('0')  # Total to Finalis (ARR + excess)
+    finalis_commissions_this_deal: Decimal = Decimal('0')  # Excess only (does not include ARR)
     commissions_accumulated: Decimal = Decimal('0')
     remaining_to_cover_arr: Decimal = Decimal('0')
     arr_coverage_percentage: float = 0.0
