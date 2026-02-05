@@ -205,18 +205,26 @@ class OutputBuilder:
         deal = ctx.deal
 
         # Calculate new accumulated fees
-        new_accumulated = contract.accumulated_success_fees + deal.total_for_calculations
+        # NOTE: Only accumulate actual success fees, NOT external retainers.
+        # Retainers are paid directly to member by client (outside Finalis)
+        # and should not count toward Lehman tier progression.
+        new_accumulated = contract.accumulated_success_fees + deal.success_fees
 
-        # Calculate new payment totals
+        # Calculate new payment totals (for cost cap tracking)
+        # Include PAYG ARR contributions so cost caps are properly enforced
+        payg_contribution = commission.payg_arr_contribution if contract.is_pay_as_you_go else Decimal('0')
+        
         new_paid_this_year = (
             state.total_paid_this_contract_year +
             subscription.advance_fees_created +
-            commission.finalis_commissions
+            commission.finalis_commissions +
+            payg_contribution
         )
         new_paid_all_time = (
             state.total_paid_all_time +
             subscription.advance_fees_created +
-            commission.finalis_commissions
+            commission.finalis_commissions +
+            payg_contribution
         )
 
         result = {

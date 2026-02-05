@@ -3,8 +3,8 @@ FINALIS CONTRACT PROCESSING ENGINE
 Python implementation
 VERSION 3.0 - Refactored Architecture
 
-This file provides backward compatibility with the v2.0 API.
-The actual implementation is now in the `engine` package.
+This file provides a simple wrapper around the new `engine` package.
+The actual implementation is in the `engine` package with modular calculators.
 """
 
 from typing import Dict, Any
@@ -17,9 +17,9 @@ from engine.processor import process_deal_from_dict, process_deal_from_json
 
 class FinalisEngine:
     """
-    Backward-compatible wrapper for the new DealProcessor.
+    Wrapper for the DealProcessor.
     
-    Deprecated: Use engine.DealProcessor directly for new code.
+    For new code, you can use engine.DealProcessor directly.
     """
 
     def __init__(self):

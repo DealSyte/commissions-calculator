@@ -4,7 +4,7 @@ Deal Processor - Main Orchestrator
 Coordinates the deal processing pipeline through discrete, testable steps.
 """
 
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Dict, Any
 
 from .models import (
@@ -137,9 +137,10 @@ class DealProcessor:
             commission.finalis_commissions
         )
 
-        # Calculate coverage percentage
+        # Calculate coverage percentage using Decimal arithmetic for precision
         if arr > 0:
-            coverage_pct = round(float((total_accumulated / arr) * 100), 2)
+            coverage_decimal = (total_accumulated / arr) * Decimal('100')
+            coverage_pct = float(coverage_decimal.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
         else:
             coverage_pct = 0.0
 

@@ -78,9 +78,13 @@ class DebtCollector:
         """
         Calculate which contract year we're in.
         
-        Year 1 = days 0-364
-        Year 2 = days 365-729
-        etc.
+        Uses fixed 365-day years (not calendar years) as per PRD:
+        - Year 1 = days 0-364
+        - Year 2 = days 365-729
+        - etc.
+        
+        NOTE: This intentionally does NOT account for leap years.
+        Contract years are fixed 365-day periods for consistency.
         """
         start = datetime.strptime(contract_start_date, "%Y-%m-%d")
         deal = datetime.strptime(deal_date, "%Y-%m-%d")
