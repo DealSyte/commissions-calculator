@@ -14,15 +14,39 @@ A contract processing engine for calculating M&A deal fees, commissions, and pay
 ## Quick Start
 
 ```bash
+# Create and activate virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
 # Install dependencies
 pip install -r requirements.txt
 
 # Run locally
 python main.py
 
-# Run with Gunicorn
+# Run with Gunicorn (production)
 gunicorn main:app --bind 0.0.0.0:8080
 ```
+
+## Web Interface (Internal Testing)
+
+A minimalist web calculator is available for internal testing purposes:
+
+```bash
+# Start the server
+source .venv/bin/activate
+python main.py
+```
+
+Then open http://localhost:8080 in your browser.
+
+> **Note:** This UI is deliberately minimalist and intended for internal testing only. For production integrations, use the `/process_deal` API endpoint directly.
+
+The web interface provides:
+- Full form inputs for deal, contract, and state parameters
+- Dynamic subscription fee management
+- Real-time calculation results with collapsible sections
+- Mobile-responsive Material Design layout
 
 ## API Endpoint
 
@@ -97,9 +121,11 @@ curl -X POST http://localhost:8080/process_deal \
 ## Project Structure
 
 ```
-finalis-engine-api/
+commissions-calculator/
 ├── main.py                    # Flask API entry point
-├── finalis_engine.py          # Backward compatibility wrapper
+├── finalis_engine.py          # Legacy wrapper
+├── static/                    # Web interface
+│   └── index.html            # Material Design calculator
 ├── engine/                    # Core processing engine
 │   ├── __init__.py           # Package exports
 │   ├── models.py             # Domain models (dataclasses)
