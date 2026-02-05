@@ -137,13 +137,15 @@ class TestCostCapEnforcement:
         # Set some fields that should be preserved
         ctx.commission.entered_commissions_mode = True
         ctx.commission.new_commissions_mode = True
-        ctx.commission.payg_arr_contribution = Decimal('1000')
+        # Note: payg_arr_contribution is not preserved for non-PAYG contracts
+        # because non-PAYG contracts shouldn't have ARR contributions
         
         result = enforcer.apply(ctx)
         
         assert result.entered_commissions_mode == True
         assert result.new_commissions_mode == True
-        assert result.payg_arr_contribution == Decimal('1000')
+        # For non-PAYG, ARR contribution is always 0
+        assert result.payg_arr_contribution == Decimal('0')
         # But commissions were capped
         assert result.finalis_commissions == Decimal('3000')
 

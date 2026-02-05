@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory, make_response
 from flask_cors import CORS
 from engine import DealProcessor
 import os
@@ -8,7 +8,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 
 # Enable CORS for all routes (permite que N8N y Lovable llamen a la API)
 CORS(app)
@@ -18,12 +18,24 @@ processor = DealProcessor()
 
 
 @app.route("/", methods=["GET"])
-def healthcheck():
+def index():
+    """Serve the web calculator interface"""
+    response = make_response(send_from_directory('static', 'index.html'))
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
+
+@app.route("/api", methods=["GET"])
+def api_info():
+    """API information endpoint"""
     return jsonify({
         "status": "ok",
-        "message": "Finalis Engine API running",
+        "message": "Finalis Commission Calculator API",
         "version": "3.0",
         "endpoints": {
+            "calculator": "/ [GET]",
             "process_deal": "/process_deal [POST]",
             "health": "/health [GET]"
         }

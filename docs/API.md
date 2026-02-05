@@ -311,7 +311,7 @@ New state values to persist:
 |-------|------|-------------|
 | `arr_target` | string | Annual subscription target |
 | `arr_contribution_this_deal` | string | Contribution toward ARR this deal |
-| `finalis_commissions_this_deal` | string | Commissions after ARR covered |
+| `finalis_commissions_this_deal` | string | Excess commissions collected this deal (after ARR coverage). Does NOT include `arr_contribution_this_deal`. Add both to get total Finalis charge. |
 | `commissions_accumulated` | string | Cumulative commissions |
 | `remaining_to_cover_arr` | string | ARR still needed |
 | `arr_coverage_percentage` | number | Percentage of ARR covered |
