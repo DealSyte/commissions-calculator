@@ -1,0 +1,312 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://finalis.com/schemas/deal-request.json",
+  "title": "Finalis Deal Processing Request",
+  "description": "Input schema for the Finalis Engine API /process_deal endpoint",
+  "type": "object",
+  "required": ["deal", "contract", "state"],
+  "properties": {
+    "deal": {
+      "$ref": "#/definitions/Deal"
+    },
+    "contract": {
+      "$ref": "#/definitions/Contract"
+    },
+    "state": {
+      "$ref": "#/definitions/ContractState"
+    }
+  },
+  "definitions": {
+    "Deal": {
+      "type": "object",
+      "description": "Information about the deal being processed",
+      "required": [
+        "deal_name",
+        "success_fees",
+        "deal_date",
+        "is_distribution_fee_true",
+        "is_sourcing_fee_true",
+        "is_deal_exempt"
+      ],
+      "properties": {
+        "deal_name": {
+          "type": "string",
+          "description": "Name or identifier of the deal",
+          "minLength": 1,
+          "examples": ["Acme Corp Acquisition"]
+        },
+        "success_fees": {
+          "type": "number",
+          "description": "Total success fees in USD",
+          "exclusiveMinimum": 0,
+          "examples": [500000, 1000000, 2500000]
+        },
+        "deal_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Date of the deal in ISO format (YYYY-MM-DD)",
+          "examples": ["2026-01-15", "2026-06-30"]
+        },
+        "is_distribution_fee_true": {
+          "type": "boolean",
+          "description": "Whether 10% distribution fee applies to this deal"
+        },
+        "is_sourcing_fee_true": {
+          "type": "boolean",
+          "description": "Whether 10% sourcing fee applies to this deal"
+        },
+        "is_deal_exempt": {
+          "type": "boolean",
+          "description": "Whether deal uses exempt rate (1.5%) instead of contract rate"
+        },
+        "has_finra_fee": {
+          "type": "boolean",
+          "description": "Whether FINRA regulatory fee (0.4732%) applies",
+          "default": true
+        },
+        "external_retainer": {
+          "type": "number",
+          "description": "External retainer amount in USD",
+          "minimum": 0,
+          "default": 0
+        },
+        "has_external_retainer": {
+          "type": "boolean",
+          "description": "Whether an external retainer exists",
+          "default": false
+        },
+        "include_retainer_in_fees": {
+          "type": "boolean",
+          "description": "Whether to include external retainer in fee calculations",
+          "default": true
+        },
+        "has_preferred_rate": {
+          "type": "boolean",
+          "description": "Whether a preferred rate overrides the contract rate",
+          "default": false
+        },
+        "preferred_rate": {
+          "type": ["number", "null"],
+          "description": "Custom rate (0.0-1.0) if has_preferred_rate is true",
+          "minimum": 0,
+          "maximum": 1,
+          "default": null
+        }
+      }
+    },
+    "Contract": {
+      "type": "object",
+      "description": "Contract configuration and fee structure",
+      "required": ["rate_type", "accumulated_success_fees_before_this_deal"],
+      "properties": {
+        "rate_type": {
+          "type": "string",
+          "enum": ["fixed", "lehman"],
+          "description": "Type of rate structure"
+        },
+        "accumulated_success_fees_before_this_deal": {
+          "type": "number",
+          "description": "Cumulative success fees processed before this deal",
+          "minimum": 0
+        },
+        "fixed_rate": {
+          "type": ["number", "null"],
+          "description": "Fixed rate (0.0-1.0), required when rate_type is 'fixed'",
+          "minimum": 0,
+          "maximum": 1,
+          "examples": [0.05, 0.03, 0.08]
+        },
+        "lehman_tiers": {
+          "type": "array",
+          "description": "Tiered rate structure, required when rate_type is 'lehman'",
+          "items": {
+            "$ref": "#/definitions/LehmanTier"
+          },
+          "default": []
+        },
+        "is_pay_as_you_go": {
+          "type": "boolean",
+          "description": "Whether this is a PAYG contract (no subscription)",
+          "default": false
+        },
+        "contract_start_date": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Contract start date in ISO format",
+          "default": null
+        },
+        "annual_subscription": {
+          "type": "number",
+          "description": "Annual subscription amount (ARR target for PAYG)",
+          "minimum": 0,
+          "default": 0
+        },
+        "cost_cap_type": {
+          "type": ["string", "null"],
+          "enum": ["annual", "total", null],
+          "description": "Type of cost cap: 'annual' for yearly limit, 'total' for lifetime",
+          "default": null
+        },
+        "cost_cap_amount": {
+          "type": ["number", "null"],
+          "description": "Maximum cost under the specified cap type",
+          "minimum": 0,
+          "default": null
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "rate_type": { "const": "fixed" } }
+          },
+          "then": {
+            "required": ["fixed_rate"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "rate_type": { "const": "lehman" } }
+          },
+          "then": {
+            "properties": {
+              "lehman_tiers": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "LehmanTier": {
+      "type": "object",
+      "description": "A single tier in a Lehman fee structure",
+      "required": ["lower_bound", "upper_bound", "rate"],
+      "properties": {
+        "lower_bound": {
+          "type": "number",
+          "description": "Start of tier (inclusive)",
+          "minimum": 0
+        },
+        "upper_bound": {
+          "type": ["number", "null"],
+          "description": "End of tier (exclusive), null means unlimited",
+          "minimum": 0
+        },
+        "rate": {
+          "type": "number",
+          "description": "Rate for this tier (0.0-1.0)",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "ContractState": {
+      "type": "object",
+      "description": "Current state of the contract",
+      "properties": {
+        "current_credit": {
+          "type": "number",
+          "description": "Available credit balance",
+          "minimum": 0,
+          "default": 0
+        },
+        "current_debt": {
+          "type": "number",
+          "description": "Outstanding debt to collect",
+          "minimum": 0,
+          "default": 0
+        },
+        "is_in_commissions_mode": {
+          "type": "boolean",
+          "description": "Whether contract is in commissions mode",
+          "default": false
+        },
+        "future_subscription_fees": {
+          "type": "array",
+          "description": "Scheduled subscription payments",
+          "items": {
+            "$ref": "#/definitions/FuturePayment"
+          },
+          "default": []
+        },
+        "deferred_schedule": {
+          "type": "array",
+          "description": "Year-specific deferred fees",
+          "items": {
+            "$ref": "#/definitions/DeferredEntry"
+          },
+          "default": []
+        },
+        "deferred_subscription_fee": {
+          "type": "number",
+          "description": "Legacy single deferred subscription amount",
+          "minimum": 0,
+          "default": 0
+        },
+        "total_paid_this_contract_year": {
+          "type": "number",
+          "description": "Total payments made this contract year (for annual cap)",
+          "minimum": 0,
+          "default": 0
+        },
+        "total_paid_all_time": {
+          "type": "number",
+          "description": "Total payments made lifetime (for total cap)",
+          "minimum": 0,
+          "default": 0
+        },
+        "payg_commissions_accumulated": {
+          "type": "number",
+          "description": "Accumulated commissions for PAYG contracts",
+          "minimum": 0,
+          "default": 0
+        }
+      }
+    },
+    "FuturePayment": {
+      "type": "object",
+      "description": "A scheduled future subscription payment",
+      "required": ["payment_id", "due_date", "amount_due", "amount_paid"],
+      "properties": {
+        "payment_id": {
+          "type": "string",
+          "description": "Unique payment identifier",
+          "minLength": 1
+        },
+        "due_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Payment due date in ISO format"
+        },
+        "amount_due": {
+          "type": "number",
+          "description": "Total amount due for this payment",
+          "minimum": 0
+        },
+        "amount_paid": {
+          "type": "number",
+          "description": "Amount already paid toward this payment",
+          "minimum": 0
+        }
+      }
+    },
+    "DeferredEntry": {
+      "type": "object",
+      "description": "A year-specific deferred subscription fee",
+      "required": ["year", "amount"],
+      "properties": {
+        "year": {
+          "type": "integer",
+          "description": "Year the deferred fee applies to",
+          "minimum": 2000,
+          "maximum": 2100
+        },
+        "amount": {
+          "type": "number",
+          "description": "Deferred amount for that year",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

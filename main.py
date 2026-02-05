@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from finalis_engine import FinalisEngine
+from engine import DealProcessor
 import os
 import logging
 
@@ -13,7 +13,8 @@ app = Flask(__name__)
 # Enable CORS for all routes (permite que N8N y Lovable llamen a la API)
 CORS(app)
 
-engine = FinalisEngine()
+# Initialize the deal processor
+processor = DealProcessor()
 
 
 @app.route("/", methods=["GET"])
@@ -21,7 +22,7 @@ def healthcheck():
     return jsonify({
         "status": "ok",
         "message": "Finalis Engine API running",
-        "version": "2.0",
+        "version": "3.0",
         "endpoints": {
             "process_deal": "/process_deal [POST]",
             "health": "/health [GET]"
@@ -51,11 +52,11 @@ def process_deal():
             }), 400
 
         # Log request
-        deal_name = input_data.get('new_deal', {}).get('deal_name', 'Unknown')
+        deal_name = input_data.get('deal', {}).get('deal_name', 'Unknown')
         logger.info(f"Processing deal: {deal_name}")
 
         # Process through engine
-        result = engine.process_deal(input_data)
+        result = processor.process_from_dict(input_data)
 
         logger.info(f"Deal processed successfully: {deal_name}")
 
