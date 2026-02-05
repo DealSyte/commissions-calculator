@@ -1,0 +1,237 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://finalis.com/schemas/deal-response.json",
+  "title": "Finalis Deal Processing Response",
+  "description": "Output schema from the Finalis Engine API /process_deal endpoint",
+  "type": "object",
+  "required": [
+    "deal_summary",
+    "calculations",
+    "state_changes",
+    "updated_future_payments",
+    "updated_contract_state"
+  ],
+  "properties": {
+    "deal_summary": {
+      "$ref": "#/definitions/DealSummary"
+    },
+    "calculations": {
+      "$ref": "#/definitions/Calculations"
+    },
+    "state_changes": {
+      "$ref": "#/definitions/StateChanges"
+    },
+    "updated_future_payments": {
+      "type": "array",
+      "description": "Updated payment objects after advance fee allocation",
+      "items": {
+        "$ref": "#/definitions/UpdatedPayment"
+      }
+    },
+    "updated_contract_state": {
+      "$ref": "#/definitions/UpdatedContractState"
+    },
+    "payg_tracking": {
+      "oneOf": [
+        { "$ref": "#/definitions/PaygTracking" },
+        { "type": "null" }
+      ],
+      "description": "PAYG-specific tracking, only present for PAYG contracts"
+    }
+  },
+  "definitions": {
+    "DealSummary": {
+      "type": "object",
+      "description": "Summary of the processed deal",
+      "required": ["deal_name", "success_fees", "deal_date", "contract_year"],
+      "properties": {
+        "deal_name": {
+          "type": "string",
+          "description": "Name of the processed deal"
+        },
+        "success_fees": {
+          "type": "string",
+          "description": "Success fees amount (string for decimal precision)"
+        },
+        "deal_date": {
+          "type": "string",
+          "description": "Date of the deal"
+        },
+        "contract_year": {
+          "type": "integer",
+          "description": "Year of the contract (1-based)"
+        }
+      }
+    },
+    "Calculations": {
+      "type": "object",
+      "description": "Detailed calculation results",
+      "properties": {
+        "finra_fee": {
+          "type": "string",
+          "description": "FINRA regulatory fee (0.4732% of success fees)"
+        },
+        "distribution_fee": {
+          "type": "string",
+          "description": "Distribution fee (10% if applicable)"
+        },
+        "sourcing_fee": {
+          "type": "string",
+          "description": "Sourcing fee (10% if applicable)"
+        },
+        "implied_total": {
+          "type": "string",
+          "description": "Total implied cost before credit/subscription adjustments"
+        },
+        "debt_collected": {
+          "type": "string",
+          "description": "Total debt collected from this deal"
+        },
+        "credit_used": {
+          "type": "string",
+          "description": "Credit applied against implied cost"
+        },
+        "implied_after_credit": {
+          "type": "string",
+          "description": "Implied cost remaining after credit application"
+        },
+        "advance_fees_created": {
+          "type": "string",
+          "description": "Subscription payments prepaid from this deal"
+        },
+        "implied_after_subscription": {
+          "type": "string",
+          "description": "Implied cost after subscription allocation"
+        },
+        "finalis_commissions": {
+          "type": "string",
+          "description": "Final Finalis commissions after all adjustments"
+        },
+        "amount_not_charged_due_to_cap": {
+          "type": "string",
+          "description": "Amount waived due to cost cap limits"
+        },
+        "net_payout": {
+          "type": "string",
+          "description": "Net payout to the broker"
+        }
+      }
+    },
+    "StateChanges": {
+      "type": "object",
+      "description": "Changes to contract state from this transaction",
+      "properties": {
+        "debt_collected": {
+          "type": "string",
+          "description": "Debt collected in this transaction"
+        },
+        "debt_remaining": {
+          "type": "string",
+          "description": "Remaining debt balance after collection"
+        },
+        "credit_generated": {
+          "type": "string",
+          "description": "New credit generated from debt collection"
+        },
+        "credit_used": {
+          "type": "string",
+          "description": "Credit consumed by implied cost"
+        },
+        "credit_remaining": {
+          "type": "string",
+          "description": "Credit balance after transaction"
+        },
+        "entered_commissions_mode": {
+          "type": "boolean",
+          "description": "Whether contract entered commissions mode with this deal"
+        },
+        "is_now_in_commissions_mode": {
+          "type": "boolean",
+          "description": "Current commissions mode status after processing"
+        }
+      }
+    },
+    "UpdatedPayment": {
+      "type": "object",
+      "description": "A subscription payment with updated paid amount",
+      "properties": {
+        "payment_id": {
+          "type": "string",
+          "description": "Unique payment identifier"
+        },
+        "due_date": {
+          "type": "string",
+          "description": "Payment due date"
+        },
+        "amount_due": {
+          "type": "string",
+          "description": "Total amount due"
+        },
+        "amount_paid": {
+          "type": "string",
+          "description": "Amount paid (may include advance allocation)"
+        },
+        "amount_owed": {
+          "type": "string",
+          "description": "Remaining amount owed"
+        }
+      }
+    },
+    "UpdatedContractState": {
+      "type": "object",
+      "description": "New contract state values to persist",
+      "properties": {
+        "current_credit": {
+          "type": "string",
+          "description": "New credit balance"
+        },
+        "current_debt": {
+          "type": "string",
+          "description": "New debt balance"
+        },
+        "is_in_commissions_mode": {
+          "type": "boolean",
+          "description": "New commissions mode status"
+        },
+        "total_paid_this_contract_year": {
+          "type": "string",
+          "description": "Updated year-to-date payments"
+        },
+        "total_paid_all_time": {
+          "type": "string",
+          "description": "Updated lifetime payments"
+        }
+      }
+    },
+    "PaygTracking": {
+      "type": "object",
+      "description": "PAYG-specific tracking information",
+      "properties": {
+        "arr_target": {
+          "type": "string",
+          "description": "Annual subscription target (ARR)"
+        },
+        "arr_contribution_this_deal": {
+          "type": "string",
+          "description": "Amount contributed toward ARR from this deal"
+        },
+        "finalis_commissions_this_deal": {
+          "type": "string",
+          "description": "Commissions after ARR is covered"
+        },
+        "commissions_accumulated": {
+          "type": "string",
+          "description": "Cumulative commissions across all deals"
+        },
+        "remaining_to_cover_arr": {
+          "type": "string",
+          "description": "ARR amount still needed"
+        },
+        "arr_coverage_percentage": {
+          "type": "number",
+          "description": "Percentage of ARR covered (0-100+)"
+        }
+      }
+    }
+  }
+}
