@@ -11,10 +11,174 @@
 |-------------|-----|
 | **Production** | `https://{api-id}.execute-api.us-east-1.amazonaws.com/Prod` |
 | **Staging** | `https://{api-id}.execute-api.us-east-1.amazonaws.com/Prod` |
-| **Dev** | `https://{api-id}.execute-api.us-east-1.amazonaws.com/Prod` |
 | **Local** | `http://localhost:8080` |
 
 > **Note:** Each environment has its own API Gateway. Get the actual URL from the SAM deployment output or AWS Console.
+
+---
+
+## Invoking from finalis-api (Same AWS Account)
+
+For internal service-to-service calls from `finalis-api`, use **direct Lambda invocation** via AWS SDK. This is faster than API Gateway and uses IAM for authentication.
+
+### Lambda Function Names
+
+| Environment | Function Name |
+|-------------|---------------|
+| **Staging** | `finalis-engine-staging` |
+| **Production** | `finalis-engine-prod` |
+
+### Python Example (boto3)
+
+```python
+import json
+import boto3
+
+# Initialize Lambda client
+lambda_client = boto3.client('lambda', region_name='us-east-1')
+
+def invoke_engine(payload: dict, environment: str = 'staging') -> dict:
+    """
+    Invoke the Finalis Engine Lambda directly.
+    
+    Args:
+        payload: Dict with 'contract', 'state', and 'deal' keys
+        environment: 'staging' or 'prod'
+    
+    Returns:
+        Processed deal result dict
+    """
+    function_name = f'finalis-engine-{environment}'
+    
+    # Wrap payload in API Gateway-like event structure
+    event = {
+        'httpMethod': 'POST',
+        'path': '/process_deal',
+        'body': json.dumps(payload)
+    }
+    
+    response = lambda_client.invoke(
+        FunctionName=function_name,
+        InvocationType='RequestResponse',  # Synchronous
+        Payload=json.dumps(event)
+    )
+    
+    # Parse response
+    response_payload = json.loads(response['Payload'].read())
+    
+    if response_payload.get('statusCode') != 200:
+        raise Exception(f"Engine error: {response_payload.get('body')}")
+    
+    return json.loads(response_payload['body'])
+
+
+# Usage example
+result = invoke_engine({
+    'contract': {
+        'rate_type': 'fixed',
+        'fixed_rate': 0.03,
+        'accumulated_success_fees_before_this_deal': 0,
+        'contract_start_date': '2025-01-01',
+        'is_pay_as_you_go': False,
+    },
+    'state': {
+        'current_credit': 0,
+        'current_debt': 0,
+        'is_in_commissions_mode': True,
+        'total_paid_this_contract_year': 0,
+        'total_paid_all_time': 0,
+        'future_subscription_fees': [],
+        'deferred_schedule': [],
+    },
+    'deal': {
+        'deal_name': 'Test Deal',
+        'success_fees': 1000000,
+        'deal_date': '2025-06-15',
+        'is_distribution_fee_true': False,
+        'is_sourcing_fee_true': False,
+        'is_deal_exempt': False,
+        'has_finra_fee': True,
+        'external_retainer': 0,
+        'has_external_retainer': False,
+        'include_retainer_in_fees': False,
+    }
+}, environment='staging')
+
+print(result['calculations']['finalis_commission'])
+```
+
+### Health Check via Lambda
+
+```python
+def check_engine_health(environment: str = 'staging') -> dict:
+    """Check if the engine Lambda is healthy."""
+    function_name = f'finalis-engine-{environment}'
+    
+    event = {
+        'httpMethod': 'GET',
+        'path': '/health'
+    }
+    
+    response = lambda_client.invoke(
+        FunctionName=function_name,
+        InvocationType='RequestResponse',
+        Payload=json.dumps(event)
+    )
+    
+    response_payload = json.loads(response['Payload'].read())
+    return json.loads(response_payload['body'])
+```
+
+### IAM Permissions Required
+
+The calling service (finalis-api) needs `lambda:InvokeFunction` permission:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "lambda:InvokeFunction",
+            "Resource": [
+                "arn:aws:lambda:us-east-1:425693140400:function:finalis-engine-staging",
+                "arn:aws:lambda:us-east-1:425693140400:function:finalis-engine-prod"
+            ]
+        }
+    ]
+}
+```
+
+### Error Handling
+
+```python
+from botocore.exceptions import ClientError
+
+try:
+    result = invoke_engine(payload)
+except ClientError as e:
+    if e.response['Error']['Code'] == 'ResourceNotFoundException':
+        # Lambda function doesn't exist
+        pass
+    elif e.response['Error']['Code'] == 'AccessDeniedException':
+        # Missing IAM permissions
+        pass
+    raise
+except Exception as e:
+    # Engine returned non-200 status
+    pass
+```
+
+### Performance Considerations
+
+| Method | Latency | Use Case |
+|--------|---------|----------|
+| **Direct Lambda** | ~50-100ms | Internal service calls |
+| **API Gateway** | ~100-200ms | External clients, webhooks |
+
+For high-throughput scenarios, consider:
+- Reusing the boto3 client (don't create per-request)
+- Using async invocation for fire-and-forget scenarios
 
 ---
 
