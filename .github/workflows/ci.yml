@@ -8,7 +8,7 @@ on:
     branches: [main]
 
 env:
-  AWS_REGION: us-east-1
+  AWS_REGION: us-east-2
   PYTHON_VERSION: '3.12'
 
 jobs:

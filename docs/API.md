@@ -9,11 +9,11 @@
 
 | Environment | URL |
 |-------------|-----|
-| **Production** | `https://{api-id}.execute-api.us-east-1.amazonaws.com/Prod` |
-| **Staging** | `https://{api-id}.execute-api.us-east-1.amazonaws.com/Prod` |
+| **Production** | `https://{api-id}.execute-api.us-east-2.amazonaws.com/Prod` |
+| **Staging** | `https://{api-id}.execute-api.us-east-2.amazonaws.com/Prod` |
 | **Local** | `http://localhost:8080` |
 
-> **Note:** Each environment has its own API Gateway. Get the actual URL from the SAM deployment output or AWS Console.
+> **Note:** For internal service calls from `finalis-api`, use direct Lambda invocation instead of API Gateway URLs. See [Invoking from finalis-api](#invoking-from-finalis-api-same-aws-account) below.
 
 ---
 
@@ -34,7 +34,7 @@ For internal service-to-service calls from `finalis-api`, use **direct Lambda in
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 
 // Initialize Lambda client (reuse across requests)
-const lambdaClient = new LambdaClient({ region: 'us-east-1' });
+const lambdaClient = new LambdaClient({ region: 'us-east-2' });
 
 // Types for the engine request/response
 interface EngineContract {
@@ -211,8 +211,8 @@ The calling service (finalis-api) needs `lambda:InvokeFunction` permission:
             "Effect": "Allow",
             "Action": "lambda:InvokeFunction",
             "Resource": [
-                "arn:aws:lambda:us-east-1:425693140400:function:finalis-engine-staging",
-                "arn:aws:lambda:us-east-1:425693140400:function:finalis-engine-prod"
+                "arn:aws:lambda:us-east-2:425693140400:function:finalis-engine-staging",
+                "arn:aws:lambda:us-east-2:425693140400:function:finalis-engine-prod"
             ]
         }
     ]
