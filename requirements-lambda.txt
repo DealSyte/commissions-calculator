@@ -1,0 +1,2 @@
+# Lambda production dependencies (no web framework needed)
+# Deploy only this file with lambda_handler.py + engine/

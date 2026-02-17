@@ -11,7 +11,16 @@ A contract processing engine for calculating M&A deal fees, commissions, and pay
 - **Cost Caps**: Annual or lifetime commission limits
 - **PAYG Support**: Pay-as-you-go contracts with ARR tracking
 
-## Quick Start
+## Architecture
+
+This project supports two deployment modes:
+
+| Mode | Entry Point | Use Case |
+|------|-------------|----------|
+| **AWS Lambda** | `lambda_handler.py` | Production (serverless) |
+| **Flask** | `main.py` | Local development & testing |
+
+## Quick Start (Local Development)
 
 ```bash
 # Create and activate virtual environment
@@ -21,16 +30,60 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Run locally
+# Run locally with Flask
 python main.py
+# → Open http://localhost:8080
 
-# Run with Gunicorn (production)
-gunicorn main:app --bind 0.0.0.0:8080
+# Run tests
+pytest tests/ -v
+
+# Run linter
+ruff check .
 ```
 
-## Web Interface (Internal Testing)
+## Deployment (AWS Lambda)
 
-A minimalist web calculator is available for internal testing purposes:
+### Prerequisites
+- AWS CLI configured with credentials
+- AWS SAM CLI installed (`brew install aws-sam-cli`)
+- Docker (for local SAM builds)
+
+### Deploy to Environment
+
+```bash
+# Build (uses Docker)
+sam build --use-container
+
+# Deploy to staging
+sam deploy --config-env staging
+
+# Deploy to production (requires confirmation)
+sam deploy --config-env prod
+```
+
+### CI/CD Pipeline
+
+Deployments are automated via GitHub Actions:
+
+| Trigger | Environment | Stack |
+|---------|-------------|-------|
+| Push to `main` | Staging | `finalis-engine-staging` |
+| Tag `v*.*.*` | Production | `finalis-engine-prod` |
+| Pull Request | CI only (lint + test) | — |
+
+**Required GitHub Secrets:**
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+
+**To release to production:**
+```bash
+git tag v3.0.0
+git push origin v3.0.0
+```
+
+## Web Interface (Local Testing)
+
+A minimalist web calculator is available at http://localhost:8080 when running locally:
 
 **macOS/Linux:**
 ```bash
@@ -144,49 +197,78 @@ curl -X POST http://localhost:8080/process_deal \
 ## Project Structure
 
 ```
-commissions-calculator/
-├── main.py                    # Flask API entry point
+finalis-engine-api/
+├── lambda_handler.py          # AWS Lambda entry point (production)
+├── main.py                    # Flask entry point (local dev)
+├── template.yaml              # SAM/CloudFormation template
+├── samconfig.toml             # SAM deployment configs
+├── pyproject.toml             # Project config (ruff, pytest)
+├── requirements.txt           # Dev dependencies (Flask, pytest)
+├── requirements-lambda.txt    # Lambda dependencies (none - zero deps!)
 ├── finalis_engine.py          # Legacy wrapper
 ├── static/                    # Web interface
-│   └── index.html            # Material Design calculator
+│   └── index.html             # Material Design calculator
 ├── engine/                    # Core processing engine
-│   ├── __init__.py           # Package exports
-│   ├── models.py             # Domain models (dataclasses)
-│   ├── validators.py         # Input validation
-│   ├── processor.py          # Deal processing orchestrator
-│   ├── output.py             # Response builder
-│   └── calculators/          # Processing pipeline steps
-│       ├── fees.py           # Fee calculations
-│       ├── debt.py           # Debt collection
-│       ├── credit.py         # Credit application
-│       ├── subscription.py   # Subscription prepayment
-│       ├── commission.py     # Commission calculation
-│       ├── cost_cap.py       # Cost cap enforcement
-│       └── payout.py         # Net payout calculation
-├── tests/                    # Test suite
-│   ├── test_engine.py        # Integration tests
-│   ├── test_fee_calculator.py
-│   ├── test_debt_collector.py
-│   ├── test_credit_applicator.py
-│   ├── test_commission_calculator.py
-│   ├── test_cost_cap.py
-│   └── test_subscription_applicator.py
-└── docs/                     # Documentation
-    ├── API.md                # API reference
-    └── schemas/              # JSON schemas
-        ├── deal-request.schema.json
-        └── deal-response.schema.json
+│   ├── __init__.py            # Package exports
+│   ├── models.py              # Domain models (dataclasses)
+│   ├── validators.py          # Input validation
+│   ├── processor.py           # Deal processing orchestrator
+│   ├── output.py              # Response builder
+│   └── calculators/           # Processing pipeline steps
+│       ├── fees.py            # Fee calculations
+│       ├── debt.py            # Debt collection
+│       ├── credit.py          # Credit application
+│       ├── subscription.py    # Subscription prepayment
+│       ├── commission.py      # Commission calculation
+│       ├── cost_cap.py        # Cost cap enforcement
+│       └── payout.py          # Net payout calculation
+├── tests/                     # Test suite
+│   ├── test_engine.py         # Integration tests
+│   ├── test_lambda_handler.py # Lambda handler tests
+│   └── ...
+├── .github/workflows/
+│   └── ci.yml                 # CI/CD pipeline
+└── docs/                      # Documentation
+    ├── API.md                 # API reference
+    └── schemas/               # JSON schemas
 ```
 
 ## Testing
 
 ```bash
 # Run all tests
-python -m pytest tests/ -v
+pytest tests/ -v
+
+# Run specific test file
+pytest tests/test_lambda_handler.py -v
 
 # Run with coverage
-python -m pytest tests/ --cov=engine --cov-report=html
+pytest tests/ --cov=engine --cov-report=html
 ```
+
+## Linting
+
+Linting is handled by [Ruff](https://docs.astral.sh/ruff/) and runs automatically:
+- **On save** in VS Code (via `.vscode/settings.json`)
+- **On PR/push** via GitHub Actions
+
+```bash
+# Manual lint check
+ruff check .
+
+# Auto-fix issues
+ruff check --fix .
+
+# Format code
+ruff format .
+```
+
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `ENVIRONMENT` | Runtime environment (dev/staging/prod) | `dev` |
+| `PORT` | Flask server port (local only) | `8080` |
 
 ## License
 

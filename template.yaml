@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Finalis Contract Engine API - Commission Calculator
+
+Parameters:
+  Environment:
+    Type: String
+    Default: staging
+    AllowedValues:
+      - staging
+      - prod
+    Description: Deployment environment
+
+Globals:
+  Function:
+    Timeout: 5
+    MemorySize: 256
+    Runtime: python3.12
+    Architectures:
+      - arm64
+    Environment:
+      Variables:
+        ENVIRONMENT: !Ref Environment
+
+Resources:
+  FinalisEngineFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "finalis-engine-${Environment}"
+      Handler: lambda_handler.lambda_handler
+      CodeUri: .
+      Description: !Sub "Finalis Commission Calculator API (${Environment})"
+      Events:
+        Health:
+          Type: Api
+          Properties:
+            Path: /health
+            Method: get
+        ApiInfo:
+          Type: Api
+          Properties:
+            Path: /api
+            Method: get
+        ProcessDeal:
+          Type: Api
+          Properties:
+            Path: /process_deal
+            Method: post
+        ProcessDealOptions:
+          Type: Api
+          Properties:
+            Path: /process_deal
+            Method: options
+
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+  FunctionArn:
+    Description: Lambda function ARN
+    Value: !GetAtt FinalisEngineFunction.Arn
+  Environment:
+    Description: Deployment environment
+    Value: !Ref Environment

@@ -5,9 +5,8 @@ Run with: python -m pytest tests/ -v
 """
 
 import pytest
-from decimal import Decimal
+
 from engine import DealProcessor
-from engine.models import DealInput
 
 
 class TestDealProcessor:
@@ -26,22 +25,17 @@ class TestDealProcessor:
                 "fixed_rate": 0.05,
                 "accumulated_success_fees_before_this_deal": 0,
                 "is_pay_as_you_go": False,
-                "contract_start_date": "2025-01-01"
+                "contract_start_date": "2025-01-01",
             },
             "state": {
                 "current_credit": 0,
                 "current_debt": 0,
                 "is_in_commissions_mode": False,
                 "future_subscription_fees": [
-                    {
-                        "payment_id": "p1",
-                        "due_date": "2025-06-01",
-                        "amount_due": 10000,
-                        "amount_paid": 0
-                    }
+                    {"payment_id": "p1", "due_date": "2025-06-01", "amount_due": 10000, "amount_paid": 0}
                 ],
                 "total_paid_this_contract_year": 0,
-                "total_paid_all_time": 0
+                "total_paid_all_time": 0,
             },
             "deal": {
                 "deal_name": "Test Deal",
@@ -50,8 +44,8 @@ class TestDealProcessor:
                 "is_distribution_fee_true": False,
                 "is_sourcing_fee_true": False,
                 "is_deal_exempt": False,
-                "has_finra_fee": True
-            }
+                "has_finra_fee": True,
+            },
         }
 
     def test_basic_processing(self, processor, sample_input):
@@ -87,7 +81,7 @@ class TestDealProcessor:
         # Implied is 5000, future payment is 10000
         # Should create 5000 in advance fees
         assert result["calculations"]["advance_fees_created"]["value"] == 5000.0
-        
+
         # Check the payment was updated
         assert len(result["updated_future_payments"]) == 1
         payment = result["updated_future_payments"][0]
@@ -100,7 +94,7 @@ class TestDealProcessor:
 
         # Future payment has 5000 remaining, so not in commissions mode
         assert result["calculations"]["finalis_commissions"]["value"] == 0
-        assert result["state_changes"]["contract_fully_prepaid"] == False
+        assert not result["state_changes"]["contract_fully_prepaid"]
 
     def test_commissions_when_fully_prepaid(self, processor, sample_input):
         """Test commissions occur when subscription is fully prepaid."""
@@ -113,8 +107,8 @@ class TestDealProcessor:
         # Should be 3000 advance fees + 2000 commissions
         assert result["calculations"]["advance_fees_created"]["value"] == 3000.0
         assert result["calculations"]["finalis_commissions"]["value"] == 2000.0
-        assert result["state_changes"]["contract_fully_prepaid"] == True
-        assert result["state_changes"]["entered_commissions_mode"] == True
+        assert result["state_changes"]["contract_fully_prepaid"]
+        assert result["state_changes"]["entered_commissions_mode"]
 
     def test_finra_fee_exempt(self, processor, sample_input):
         """Test FINRA fee can be disabled."""
@@ -157,7 +151,7 @@ class TestPayAsYouGo:
                 "accumulated_success_fees_before_this_deal": 0,
                 "is_pay_as_you_go": True,
                 "annual_subscription": 10000,
-                "contract_start_date": "2025-01-01"
+                "contract_start_date": "2025-01-01",
             },
             "state": {
                 "current_credit": 0,
@@ -166,7 +160,7 @@ class TestPayAsYouGo:
                 "future_subscription_fees": [],
                 "payg_commissions_accumulated": 0,
                 "total_paid_this_contract_year": 0,
-                "total_paid_all_time": 0
+                "total_paid_all_time": 0,
             },
             "deal": {
                 "deal_name": "PAYG Deal",
@@ -175,8 +169,8 @@ class TestPayAsYouGo:
                 "is_distribution_fee_true": False,
                 "is_sourcing_fee_true": False,
                 "is_deal_exempt": False,
-                "has_finra_fee": True
-            }
+                "has_finra_fee": True,
+            },
         }
 
     def test_payg_arr_contribution(self, processor, payg_input):
@@ -228,7 +222,7 @@ class TestDebtCollection:
                 "fixed_rate": 0.05,
                 "accumulated_success_fees_before_this_deal": 0,
                 "is_pay_as_you_go": False,
-                "contract_start_date": "2025-01-01"
+                "contract_start_date": "2025-01-01",
             },
             "state": {
                 "current_credit": 0,
@@ -236,7 +230,7 @@ class TestDebtCollection:
                 "is_in_commissions_mode": False,
                 "future_subscription_fees": [],
                 "total_paid_this_contract_year": 0,
-                "total_paid_all_time": 0
+                "total_paid_all_time": 0,
             },
             "deal": {
                 "deal_name": "Debt Test",
@@ -245,8 +239,8 @@ class TestDebtCollection:
                 "is_distribution_fee_true": False,
                 "is_sourcing_fee_true": False,
                 "is_deal_exempt": False,
-                "has_finra_fee": True
-            }
+                "has_finra_fee": True,
+            },
         }
 
     def test_debt_collection(self, processor, debt_input):
@@ -276,15 +270,20 @@ class TestValidation:
         """Test negative success fees are rejected."""
         bad_input = {
             "contract": {"rate_type": "fixed", "fixed_rate": 0.05, "accumulated_success_fees_before_this_deal": 0},
-            "state": {"current_credit": 0, "current_debt": 0, "is_in_commissions_mode": False, "future_subscription_fees": []},
+            "state": {
+                "current_credit": 0,
+                "current_debt": 0,
+                "is_in_commissions_mode": False,
+                "future_subscription_fees": [],
+            },
             "deal": {
                 "deal_name": "Bad Deal",
                 "success_fees": -100,
                 "deal_date": "2025-03-15",
                 "is_distribution_fee_true": False,
                 "is_sourcing_fee_true": False,
-                "is_deal_exempt": False
-            }
+                "is_deal_exempt": False,
+            },
         }
 
         with pytest.raises(ValueError, match="success_fees must be positive"):
@@ -294,15 +293,20 @@ class TestValidation:
         """Test invalid rate type is rejected."""
         bad_input = {
             "contract": {"rate_type": "invalid", "accumulated_success_fees_before_this_deal": 0},
-            "state": {"current_credit": 0, "current_debt": 0, "is_in_commissions_mode": False, "future_subscription_fees": []},
+            "state": {
+                "current_credit": 0,
+                "current_debt": 0,
+                "is_in_commissions_mode": False,
+                "future_subscription_fees": [],
+            },
             "deal": {
                 "deal_name": "Bad Deal",
                 "success_fees": 100000,
                 "deal_date": "2025-03-15",
                 "is_distribution_fee_true": False,
                 "is_sourcing_fee_true": False,
-                "is_deal_exempt": False
-            }
+                "is_deal_exempt": False,
+            },
         }
 
         with pytest.raises(ValueError, match="Invalid rate_type"):
@@ -317,33 +321,35 @@ class TestBackwardCompatibility:
         from finalis_engine import FinalisEngine
 
         engine = FinalisEngine()
-        
-        result = engine.process_deal({
-            "contract": {
-                "rate_type": "fixed",
-                "fixed_rate": 0.05,
-                "accumulated_success_fees_before_this_deal": 0,
-                "is_pay_as_you_go": False,
-                "contract_start_date": "2025-01-01"
-            },
-            "state": {
-                "current_credit": 0,
-                "current_debt": 0,
-                "is_in_commissions_mode": False,
-                "future_subscription_fees": [],
-                "total_paid_this_contract_year": 0,
-                "total_paid_all_time": 0
-            },
-            "deal": {
-                "deal_name": "Compat Test",
-                "success_fees": 100000,
-                "deal_date": "2025-03-15",
-                "is_distribution_fee_true": False,
-                "is_sourcing_fee_true": False,
-                "is_deal_exempt": False,
-                "has_finra_fee": True
+
+        result = engine.process_deal(
+            {
+                "contract": {
+                    "rate_type": "fixed",
+                    "fixed_rate": 0.05,
+                    "accumulated_success_fees_before_this_deal": 0,
+                    "is_pay_as_you_go": False,
+                    "contract_start_date": "2025-01-01",
+                },
+                "state": {
+                    "current_credit": 0,
+                    "current_debt": 0,
+                    "is_in_commissions_mode": False,
+                    "future_subscription_fees": [],
+                    "total_paid_this_contract_year": 0,
+                    "total_paid_all_time": 0,
+                },
+                "deal": {
+                    "deal_name": "Compat Test",
+                    "success_fees": 100000,
+                    "deal_date": "2025-03-15",
+                    "is_distribution_fee_true": False,
+                    "is_sourcing_fee_true": False,
+                    "is_deal_exempt": False,
+                    "has_finra_fee": True,
+                },
             }
-        })
+        )
 
         assert result is not None
         assert "calculations" in result
