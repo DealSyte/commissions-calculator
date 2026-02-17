@@ -720,8 +720,27 @@
                         </div>
                         <div class="form-row">
                             <div class="checkbox-group">
-                                <input type="checkbox" id="is_pay_as_you_go">
+                                <input type="checkbox" id="is_pay_as_you_go" onchange="togglePaygFields()">
                                 <label for="is_pay_as_you_go">Pay-As-You-Go Contract</label>
+                                <span class="tooltip-container">
+                                    <span class="material-icons help-icon">help_outline</span>
+                                    <span class="tooltip-text">PAYG contracts accumulate commissions toward an ARR target before excess flows to Finalis. No credit or subscription prepayments apply.</span>
+                                </span>
+                            </div>
+                        </div>
+                        <!-- PAYG Fields (hidden by default) -->
+                        <div id="payg_fields_section" style="display: none;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="annual_subscription">Annual Subscription / ARR Target ($)</label>
+                                    <input type="number" id="annual_subscription" value="0" min="0" step="0.01">
+                                    <small style="color: var(--text-secondary); font-size: 11px;">The ARR amount that must be covered before commissions flow to Finalis</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="payg_commissions_accumulated">PAYG Commissions Accumulated ($)</label>
+                                    <input type="number" id="payg_commissions_accumulated" value="0" min="0" step="0.01">
+                                    <small style="color: var(--text-secondary); font-size: 11px;">Amount already accumulated toward the ARR target from previous deals</small>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1012,6 +1031,18 @@
             }));
         }
 
+        function togglePaygFields() {
+            const isPayg = document.getElementById('is_pay_as_you_go').checked;
+            const paygSection = document.getElementById('payg_fields_section');
+            paygSection.style.display = isPayg ? 'block' : 'none';
+            
+            // Clear PAYG fields when unchecked
+            if (!isPayg) {
+                document.getElementById('annual_subscription').value = 0;
+                document.getElementById('payg_commissions_accumulated').value = 0;
+            }
+        }
+
         function toggleRateFields() {
             const rateType = document.getElementById('rate_type').value;
             const fixedRateSection = document.getElementById('fixed-rate-section');
@@ -1135,6 +1166,7 @@
             const costCapType = document.getElementById('cost_cap_type').value;
             const costCapAmount = parseFloat(document.getElementById('cost_cap_amount').value) || 0;
             const rateType = document.getElementById('rate_type').value;
+            const isPayg = document.getElementById('is_pay_as_you_go').checked;
 
             const payload = {
                 contract: {
@@ -1143,7 +1175,8 @@
                     lehman_tiers: rateType === 'lehman' ? getLehmanTiers() : undefined,
                     accumulated_success_fees_before_this_deal: parseFloat(document.getElementById('accumulated_success_fees').value) || 0,
                     contract_start_date: document.getElementById('contract_start_date').value,
-                    is_pay_as_you_go: document.getElementById('is_pay_as_you_go').checked,
+                    is_pay_as_you_go: isPayg,
+                    annual_subscription: isPayg ? parseFloat(document.getElementById('annual_subscription').value) || 0 : undefined,
                     cost_cap_type: costCapType !== 'none' ? costCapType : undefined,
                     cost_cap_amount: costCapType !== 'none' ? costCapAmount : undefined
                 },
@@ -1154,7 +1187,8 @@
                     total_paid_this_contract_year: parseFloat(document.getElementById('total_paid_this_contract_year').value) || 0,
                     total_paid_all_time: parseFloat(document.getElementById('total_paid_all_time').value) || 0,
                     future_subscription_fees: getSubscriptionFees(),
-                    deferred_schedule: []
+                    deferred_schedule: [],
+                    payg_commissions_accumulated: isPayg ? parseFloat(document.getElementById('payg_commissions_accumulated').value) || 0 : undefined
                 },
                 deal: {
                     deal_name: document.getElementById('deal_name').value,
@@ -1180,6 +1214,14 @@
             }
             if (payload.contract.lehman_tiers === undefined) {
                 delete payload.contract.lehman_tiers;
+            }
+            if (payload.contract.annual_subscription === undefined) {
+                delete payload.contract.annual_subscription;
+            }
+            
+            // Remove undefined state fields
+            if (payload.state.payg_commissions_accumulated === undefined) {
+                delete payload.state.payg_commissions_accumulated;
             }
 
             try {
