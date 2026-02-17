@@ -13,7 +13,7 @@ Parameters:
 
 Globals:
   Function:
-    Timeout: 30
+    Timeout: 5
     MemorySize: 256
     Runtime: python3.12
     Architectures:

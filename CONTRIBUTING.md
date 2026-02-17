@@ -132,7 +132,6 @@ sam deploy --config-env prod     # Production
 ```
 
 ### Automated Deploy (CI/CD)
-- Push to `develop` → deploys to **dev**
 - Push to `main` → deploys to **staging**
 - Tag `v*.*.*` → deploys to **production**
 

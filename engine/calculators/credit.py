@@ -35,25 +35,21 @@ class CreditApplicator:
             current_credit=state.current_credit,
             debt_collected=debt.total_collected,
             implied_total=implied_total,
-            is_in_commissions_mode=state.is_in_commissions_mode
+            is_in_commissions_mode=state.is_in_commissions_mode,
         )
 
     def _apply_payg(self, implied_total: Decimal) -> CreditApplication:
         """PAYG contracts have no credit system."""
         return CreditApplication(
-            credit_from_debt=Decimal('0'),
-            total_credit_available=Decimal('0'),
-            credit_used=Decimal('0'),
-            credit_remaining=Decimal('0'),
-            implied_after_credit=implied_total
+            credit_from_debt=Decimal("0"),
+            total_credit_available=Decimal("0"),
+            credit_used=Decimal("0"),
+            credit_remaining=Decimal("0"),
+            implied_after_credit=implied_total,
         )
 
     def _apply_standard(
-        self,
-        current_credit: Decimal,
-        debt_collected: Decimal,
-        implied_total: Decimal,
-        is_in_commissions_mode: bool
+        self, current_credit: Decimal, debt_collected: Decimal, implied_total: Decimal, is_in_commissions_mode: bool
     ) -> CreditApplication:
         """
         Standard contract credit logic.
@@ -70,9 +66,9 @@ class CreditApplicator:
             return CreditApplication(
                 credit_from_debt=credit_from_debt,
                 total_credit_available=total_available,
-                credit_used=Decimal('0'),
+                credit_used=Decimal("0"),
                 credit_remaining=total_available,
-                implied_after_credit=implied_total
+                implied_after_credit=implied_total,
             )
 
         # Normal case: credit absorbs implied
@@ -83,5 +79,5 @@ class CreditApplicator:
             total_credit_available=total_available,
             credit_used=credit_used,
             credit_remaining=total_available - credit_used,
-            implied_after_credit=implied_total - credit_used
+            implied_after_credit=implied_total - credit_used,
         )

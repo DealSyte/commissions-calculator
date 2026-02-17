@@ -109,15 +109,14 @@ class DealProcessor:
         contract_year = 1
         if input_data.contract.contract_start_date:
             contract_year = DebtCollector.calculate_contract_year(
-                input_data.contract.contract_start_date,
-                input_data.deal.deal_date
+                input_data.contract.contract_start_date, input_data.deal.deal_date
             )
 
         return ProcessingContext(
             deal=input_data.deal,
             contract=input_data.contract,
             initial_state=input_data.state,
-            contract_year=contract_year
+            contract_year=contract_year,
         )
 
     def _build_payg_tracking(self, ctx: ProcessingContext) -> PaygTracking:
@@ -130,15 +129,13 @@ class DealProcessor:
 
         # Total accumulated = previous + this deal's contribution
         total_accumulated = (
-            state.payg_commissions_accumulated +
-            commission.payg_arr_contribution +
-            commission.finalis_commissions
+            state.payg_commissions_accumulated + commission.payg_arr_contribution + commission.finalis_commissions
         )
 
         # Calculate coverage percentage using Decimal arithmetic for precision
         if arr > 0:
-            coverage_decimal = (total_accumulated / arr) * Decimal('100')
-            coverage_pct = float(coverage_decimal.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
+            coverage_decimal = (total_accumulated / arr) * Decimal("100")
+            coverage_pct = float(coverage_decimal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
         else:
             coverage_pct = 0.0
 
@@ -147,8 +144,8 @@ class DealProcessor:
             arr_contribution_this_deal=commission.payg_arr_contribution,
             finalis_commissions_this_deal=commission.finalis_commissions,
             commissions_accumulated=total_accumulated,
-            remaining_to_cover_arr=max(Decimal('0'), arr - total_accumulated),
-            arr_coverage_percentage=coverage_pct
+            remaining_to_cover_arr=max(Decimal("0"), arr - total_accumulated),
+            arr_coverage_percentage=coverage_pct,
         )
 
     def _result_to_dict(self, result: DealResult) -> dict[str, Any]:
@@ -158,7 +155,7 @@ class DealProcessor:
             "calculations": result.calculations,
             "state_changes": result.state_changes,
             "updated_future_payments": result.updated_future_payments,
-            "updated_contract_state": result.updated_contract_state
+            "updated_contract_state": result.updated_contract_state,
         }
         if result.payg_tracking:
             output["payg_tracking"] = result.payg_tracking
@@ -168,6 +165,7 @@ class DealProcessor:
 # =============================================================================
 # CONVENIENCE FUNCTIONS (Backward Compatibility)
 # =============================================================================
+
 
 def process_deal_from_dict(input_data: dict[str, Any]) -> dict[str, Any]:
     """

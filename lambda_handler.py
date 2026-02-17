@@ -135,6 +135,10 @@ def handle_process_deal(event):
         }
 
     except Exception as e:
-        # Unexpected errors
-        logger.error(f"Processing error: {str(e)}")
-        return {"statusCode": 500, "headers": CORS_HEADERS, "body": json.dumps({"error": str(e), "status": "failed"})}
+        # Unexpected errors - log details but return generic message to avoid information disclosure
+        logger.error(f"Unexpected processing error: {str(e)}", exc_info=True)
+        return {
+            "statusCode": 500,
+            "headers": CORS_HEADERS,
+            "body": json.dumps({"error": "An unexpected error occurred during processing", "status": "failed"}),
+        }

@@ -22,9 +22,9 @@ def extract_test_classes_and_methods(test_file: Path) -> dict[str, list[str]]:
     classes = {}
     current_class = None
 
-    for line in content.split('\n'):
+    for line in content.split("\n"):
         # Match class definitions
-        class_match = re.match(r'^class (Test\w+)', line)
+        class_match = re.match(r"^class (Test\w+)", line)
         if class_match:
             current_class = class_match.group(1)
             classes[current_class] = []
@@ -32,7 +32,7 @@ def extract_test_classes_and_methods(test_file: Path) -> dict[str, list[str]]:
 
         # Match test methods
         if current_class:
-            method_match = re.match(r'^\s+def (test_\w+)', line)
+            method_match = re.match(r"^\s+def (test_\w+)", line)
             if method_match:
                 classes[current_class].append(method_match.group(1))
 
@@ -44,10 +44,10 @@ def extract_documented_tests(doc_file: Path) -> tuple[set[str], set[str]]:
     content = doc_file.read_text()
 
     # Find test classes mentioned (e.g., **Test Class**: `TestPreferredRateOverride`)
-    classes = set(re.findall(r'\*\*Test Class\*\*:\s*`(Test\w+)`', content))
+    classes = set(re.findall(r"\*\*Test Class\*\*:\s*`(Test\w+)`", content))
 
     # Find test methods mentioned (e.g., **Test Method**: `test_preferred_rate_overrides_lehman`)
-    methods = set(re.findall(r'\*\*Test Method\*\*:\s*`(test_\w+)`', content))
+    methods = set(re.findall(r"\*\*Test Method\*\*:\s*`(test_\w+)`", content))
 
     return classes, methods
 
@@ -57,8 +57,8 @@ def main():
     script_dir = Path(__file__).parent
     project_root = script_dir.parent
 
-    test_file = project_root / 'tests' / 'test_integration_scenarios.py'
-    doc_file = project_root / 'docs' / 'test_scenarios_business_summary.md'
+    test_file = project_root / "tests" / "test_integration_scenarios.py"
+    doc_file = project_root / "docs" / "test_scenarios_business_summary.md"
 
     # Check files exist
     if not test_file.exists():
@@ -144,5 +144,5 @@ def main():
     sys.exit(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

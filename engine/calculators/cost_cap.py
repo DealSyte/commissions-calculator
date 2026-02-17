@@ -48,7 +48,7 @@ class CostCapEnforcer:
             return commission
 
         # Calculate available space under cap
-        available_space = max(Decimal('0'), cap_amount - total_paid)
+        available_space = max(Decimal("0"), cap_amount - total_paid)
 
         # For PAYG, the total to charge includes both ARR contribution and excess
         # For standard contracts, payg_arr_contribution is always 0
@@ -64,7 +64,7 @@ class CostCapEnforcer:
             return commission
 
         # We exceed the cap - reduce Finalis amounts (advance fees have priority)
-        space_for_finalis = max(Decimal('0'), available_space - advance_fees)
+        space_for_finalis = max(Decimal("0"), available_space - advance_fees)
 
         # For PAYG, we need to re-split the capped total between ARR and excess
         # ARR has priority over excess commissions
@@ -72,7 +72,7 @@ class CostCapEnforcer:
             # First allocate to ARR (up to the original ARR contribution)
             arr_after_cap = min(payg_arr, space_for_finalis)
             # Remainder goes to excess commissions
-            excess_after_cap = max(Decimal('0'), space_for_finalis - arr_after_cap)
+            excess_after_cap = max(Decimal("0"), space_for_finalis - arr_after_cap)
 
             # Recalculate entered_commissions_mode based on actual ARR coverage
             # If ARR contribution was reduced by cap, we may not have fully covered ARR
@@ -86,14 +86,14 @@ class CostCapEnforcer:
                 new_commissions_mode = commission.new_commissions_mode
         else:
             # Standard contracts: no ARR, just commissions
-            arr_after_cap = Decimal('0')
+            arr_after_cap = Decimal("0")
             excess_after_cap = min(excess_commissions, space_for_finalis)
             entered_commissions_mode = commission.entered_commissions_mode
             new_commissions_mode = commission.new_commissions_mode
 
         # Calculate amount not charged
         amount_not_charged = implied_total - (advance_fees + space_for_finalis)
-        amount_not_charged = max(Decimal('0'), amount_not_charged)
+        amount_not_charged = max(Decimal("0"), amount_not_charged)
 
         # Return updated commission with cap applied
         return CommissionCalculation(
@@ -102,5 +102,5 @@ class CostCapEnforcer:
             amount_not_charged_due_to_cap=amount_not_charged,
             entered_commissions_mode=entered_commissions_mode,
             new_commissions_mode=new_commissions_mode,
-            payg_arr_contribution=arr_after_cap
+            payg_arr_contribution=arr_after_cap,
         )

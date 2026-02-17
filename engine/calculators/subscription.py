@@ -32,21 +32,18 @@ class SubscriptionApplicator:
 
         if contract.is_pay_as_you_go:
             return SubscriptionApplication(
-                advance_fees_created=Decimal('0'),
+                advance_fees_created=Decimal("0"),
                 contract_fully_prepaid=True,  # PAYG is always "prepaid"
                 updated_payments=[],
-                implied_after_subscription=ctx.credit.implied_after_credit
+                implied_after_subscription=ctx.credit.implied_after_credit,
             )
 
         return self._apply_standard(
-            implied_remaining=ctx.credit.implied_after_credit,
-            future_payments=ctx.initial_state.future_payments
+            implied_remaining=ctx.credit.implied_after_credit, future_payments=ctx.initial_state.future_payments
         )
 
     def _apply_standard(
-        self,
-        implied_remaining: Decimal,
-        future_payments: list[FuturePayment]
+        self, implied_remaining: Decimal, future_payments: list[FuturePayment]
     ) -> SubscriptionApplication:
         """Apply implied cost to future subscription payments."""
 
@@ -54,10 +51,10 @@ class SubscriptionApplicator:
             # No advance fees needed
             updated = self._format_payments_unchanged(future_payments)
             return SubscriptionApplication(
-                advance_fees_created=Decimal('0'),
+                advance_fees_created=Decimal("0"),
                 contract_fully_prepaid=len(future_payments) == 0,
                 updated_payments=updated,
-                implied_after_subscription=Decimal('0')
+                implied_after_subscription=Decimal("0"),
             )
 
         # Calculate total owed across all future payments
@@ -67,15 +64,10 @@ class SubscriptionApplicator:
         advance_created = min(implied_remaining, total_owed)
 
         # Apply to payments in chronological order
-        updated_payments, remaining = self._apply_to_payments(
-            future_payments, advance_created
-        )
+        updated_payments, remaining = self._apply_to_payments(future_payments, advance_created)
 
         # Check if fully prepaid
-        fully_prepaid = all(
-            Decimal(str(p['remaining'])) == Decimal('0')
-            for p in updated_payments
-        )
+        fully_prepaid = all(Decimal(str(p["remaining"])) == Decimal("0") for p in updated_payments)
 
         # Special case: no future payments = fully prepaid
         if len(future_payments) == 0:
@@ -87,14 +79,10 @@ class SubscriptionApplicator:
             advance_fees_created=advance_created,
             contract_fully_prepaid=fully_prepaid,
             updated_payments=updated_payments,
-            implied_after_subscription=implied_after
+            implied_after_subscription=implied_after,
         )
 
-    def _apply_to_payments(
-        self,
-        payments: list[FuturePayment],
-        advance_amount: Decimal
-    ) -> tuple[list[dict], Decimal]:
+    def _apply_to_payments(self, payments: list[FuturePayment], advance_amount: Decimal) -> tuple[list[dict], Decimal]:
         """
         Apply advance amount to payments in chronological order.
         Returns (updated_payments, remaining_advance).
@@ -115,18 +103,20 @@ class SubscriptionApplicator:
             elif remaining > 0:
                 # Partially cover
                 new_paid = payment.amount_paid + remaining
-                remaining = Decimal('0')
+                remaining = Decimal("0")
             else:
                 # No advance left
                 new_paid = payment.amount_paid
 
-            updated.append({
-                "payment_id": payment.payment_id,
-                "due_date": payment.due_date,
-                "original_amount": to_money(payment.amount_due),
-                "amount_paid": to_money(new_paid),
-                "remaining": to_money(payment.amount_due - new_paid)
-            })
+            updated.append(
+                {
+                    "payment_id": payment.payment_id,
+                    "due_date": payment.due_date,
+                    "original_amount": to_money(payment.amount_due),
+                    "amount_paid": to_money(new_paid),
+                    "remaining": to_money(payment.amount_due - new_paid),
+                }
+            )
 
         return updated, remaining
 
@@ -138,7 +128,7 @@ class SubscriptionApplicator:
                 "due_date": p.due_date,
                 "original_amount": to_money(p.amount_due),
                 "amount_paid": to_money(p.amount_paid),
-                "remaining": to_money(p.amount_owed)
+                "remaining": to_money(p.amount_owed),
             }
             for p in payments
         ]

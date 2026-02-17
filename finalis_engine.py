@@ -29,10 +29,10 @@ class FinalisEngine:
         return self._processor.process_from_dict(input_data)
 
     # Keep the old constants for any code that references them
-    FINRA_RATE = '0.004732'
-    DISTRIBUTION_RATE = '0.10'
-    SOURCING_RATE = '0.10'
-    DEAL_EXEMPT_RATE = '0.015'
+    FINRA_RATE = "0.004732"
+    DISTRIBUTION_RATE = "0.10"
+    SOURCING_RATE = "0.10"
+    DEAL_EXEMPT_RATE = "0.015"
 
     @staticmethod
     def to_money(value) -> float:
@@ -41,4 +41,4 @@ class FinalisEngine:
 
 
 # Export for backward compatibility
-__all__ = ['FinalisEngine', 'process_deal_from_dict', 'process_deal_from_json']
+__all__ = ["FinalisEngine", "process_deal_from_dict", "process_deal_from_json"]

@@ -12,17 +12,17 @@ from ..models import FeeCalculation, LehmanTier, ProcessingContext
 
 def quantize_money(value: Decimal) -> Decimal:
     """Round to 2 decimal places using banker's rounding."""
-    return value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 class FeeCalculator:
     """Calculates all standard fees for a deal."""
 
     # Fee rates as class constants
-    FINRA_RATE = Decimal('0.004732')
-    DISTRIBUTION_RATE = Decimal('0.10')
-    SOURCING_RATE = Decimal('0.10')
-    DEAL_EXEMPT_RATE = Decimal('0.015')
+    FINRA_RATE = Decimal("0.004732")
+    DISTRIBUTION_RATE = Decimal("0.10")
+    SOURCING_RATE = Decimal("0.10")
+    DEAL_EXEMPT_RATE = Decimal("0.015")
 
     def calculate(self, ctx: ProcessingContext) -> FeeCalculation:
         """Calculate all fees and return FeeCalculation result."""
@@ -34,25 +34,25 @@ class FeeCalculator:
             finra_fee=self._calculate_finra(amount, deal.has_finra_fee),
             distribution_fee=self._calculate_distribution(dist_sourcing_amount, deal.is_distribution_fee),
             sourcing_fee=self._calculate_sourcing(dist_sourcing_amount, deal.is_sourcing_fee),
-            implied_total=self._calculate_implied(ctx)
+            implied_total=self._calculate_implied(ctx),
         )
 
     def _calculate_finra(self, amount: Decimal, has_finra_fee: bool) -> Decimal:
         """Calculate FINRA/SIPC fee (0.4732%)."""
         if not has_finra_fee:
-            return Decimal('0')
+            return Decimal("0")
         return quantize_money(amount * self.FINRA_RATE)
 
     def _calculate_distribution(self, amount: Decimal, is_applicable: bool) -> Decimal:
         """Calculate distribution fee (10% if applicable)."""
         if not is_applicable:
-            return Decimal('0')
+            return Decimal("0")
         return quantize_money(amount * self.DISTRIBUTION_RATE)
 
     def _calculate_sourcing(self, amount: Decimal, is_applicable: bool) -> Decimal:
         """Calculate sourcing fee (10% if applicable)."""
         if not is_applicable:
-            return Decimal('0')
+            return Decimal("0")
         return quantize_money(amount * self.SOURCING_RATE)
 
     def _calculate_implied(self, ctx: ProcessingContext) -> Decimal:
@@ -78,12 +78,8 @@ class FeeCalculator:
             return quantize_money(amount * self.DEAL_EXEMPT_RATE)
 
         # Priority 3: Lehman Tiers
-        if contract.rate_type == 'lehman' and contract.lehman_tiers:
-            return self._calculate_lehman(
-                amount,
-                contract.lehman_tiers,
-                contract.accumulated_success_fees
-            )
+        if contract.rate_type == "lehman" and contract.lehman_tiers:
+            return self._calculate_lehman(amount, contract.lehman_tiers, contract.accumulated_success_fees)
 
         # Priority 4: Fixed Rate
         if contract.fixed_rate is not None:
@@ -91,12 +87,7 @@ class FeeCalculator:
 
         raise ValueError("Invalid rate configuration - no applicable rate found")
 
-    def _calculate_lehman(
-        self,
-        deal_amount: Decimal,
-        tiers: list[LehmanTier],
-        accumulated_before: Decimal
-    ) -> Decimal:
+    def _calculate_lehman(self, deal_amount: Decimal, tiers: list[LehmanTier], accumulated_before: Decimal) -> Decimal:
         """
         Calculate implied using Lehman progressive tiers.
 
@@ -107,7 +98,7 @@ class FeeCalculator:
         """
         acc = accumulated_before
         remaining = deal_amount
-        implied = Decimal('0')
+        implied = Decimal("0")
 
         for tier in tiers:
             if remaining <= 0:
@@ -128,9 +119,9 @@ class FeeCalculator:
                 # Infinite tier - allocate all remaining
                 allocated = remaining
             else:
-                used_in_tier = max(Decimal('0'), acc - tier.lower_bound)
+                used_in_tier = max(Decimal("0"), acc - tier.lower_bound)
                 tier_capacity = tier.upper_bound - tier.lower_bound
-                remaining_capacity = max(Decimal('0'), tier_capacity - used_in_tier)
+                remaining_capacity = max(Decimal("0"), tier_capacity - used_in_tier)
                 allocated = min(remaining_capacity, remaining)
 
             # Calculate commission for this allocation

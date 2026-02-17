@@ -14,7 +14,6 @@ to keep them in sync. The summary provides plain-English explanations of
 each test scenario for business stakeholders.
 """
 
-
 import pytest
 
 from engine import DealProcessor
@@ -34,11 +33,11 @@ class TestPreferredRateOverride:
                 "rate_type": "lehman",
                 "lehman_tiers": [
                     {"lower_bound": 0, "upper_bound": 1000000, "rate": 0.05},
-                    {"lower_bound": 1000000.01, "upper_bound": None, "rate": 0.03}
+                    {"lower_bound": 1000000.01, "upper_bound": None, "rate": 0.03},
                 ],
                 "accumulated_success_fees_before_this_deal": 0,
                 "is_pay_as_you_go": False,
-                "contract_start_date": "2025-01-01"
+                "contract_start_date": "2025-01-01",
             },
             "state": {
                 "current_credit": 0,
@@ -46,7 +45,7 @@ class TestPreferredRateOverride:
                 "is_in_commissions_mode": True,
                 "future_subscription_fees": [],
                 "total_paid_this_contract_year": 0,
-                "total_paid_all_time": 0
+                "total_paid_all_time": 0,
             },
             "deal": {
                 "deal_name": "Preferred Rate Override",
@@ -57,8 +56,8 @@ class TestPreferredRateOverride:
                 "is_deal_exempt": False,
                 "has_finra_fee": False,
                 "has_preferred_rate": True,
-                "preferred_rate": 0.02  # 2% instead of Lehman
-            }
+                "preferred_rate": 0.02,  # 2% instead of Lehman
+            },
         }
         result = processor.process_from_dict(input_data)
 
@@ -74,7 +73,7 @@ class TestPreferredRateOverride:
                 "fixed_rate": 0.05,
                 "accumulated_success_fees_before_this_deal": 0,
                 "is_pay_as_you_go": False,
-                "contract_start_date": "2025-01-01"
+                "contract_start_date": "2025-01-01",
             },
             "state": {
                 "current_credit": 0,
@@ -82,7 +81,7 @@ class TestPreferredRateOverride:
                 "is_in_commissions_mode": True,
                 "future_subscription_fees": [],
                 "total_paid_this_contract_year": 0,
-                "total_paid_all_time": 0
+                "total_paid_all_time": 0,
             },
             "deal": {
                 "deal_name": "Preferred Override Fixed",
@@ -93,8 +92,8 @@ class TestPreferredRateOverride:
                 "is_deal_exempt": False,
                 "has_finra_fee": False,
                 "has_preferred_rate": True,
-                "preferred_rate": 0.03
-            }
+                "preferred_rate": 0.03,
+            },
         }
         result = processor.process_from_dict(input_data)
 
@@ -117,7 +116,7 @@ class TestDealExempt:
                 "fixed_rate": 0.05,  # Contract is 5%
                 "accumulated_success_fees_before_this_deal": 0,
                 "is_pay_as_you_go": False,
-                "contract_start_date": "2025-01-01"
+                "contract_start_date": "2025-01-01",
             },
             "state": {
                 "current_credit": 0,
@@ -125,7 +124,7 @@ class TestDealExempt:
                 "is_in_commissions_mode": True,
                 "future_subscription_fees": [],
                 "total_paid_this_contract_year": 0,
-                "total_paid_all_time": 0
+                "total_paid_all_time": 0,
             },
             "deal": {
                 "deal_name": "M&A Exempt Deal",
@@ -134,8 +133,8 @@ class TestDealExempt:
                 "is_distribution_fee_true": False,
                 "is_sourcing_fee_true": False,
                 "is_deal_exempt": True,  # Exempt = 1.5% flat
-                "has_finra_fee": False
-            }
+                "has_finra_fee": False,
+            },
         }
         result = processor.process_from_dict(input_data)
 
@@ -158,7 +157,7 @@ class TestExternalRetainer:
                 "fixed_rate": 0.05,
                 "accumulated_success_fees_before_this_deal": 0,
                 "is_pay_as_you_go": False,
-                "contract_start_date": "2025-01-01"
+                "contract_start_date": "2025-01-01",
             },
             "state": {
                 "current_credit": 0,
@@ -166,7 +165,7 @@ class TestExternalRetainer:
                 "is_in_commissions_mode": True,
                 "future_subscription_fees": [],
                 "total_paid_this_contract_year": 0,
-                "total_paid_all_time": 0
+                "total_paid_all_time": 0,
             },
             "deal": {
                 "deal_name": "Retainer Deducted",
@@ -178,8 +177,8 @@ class TestExternalRetainer:
                 "has_finra_fee": False,
                 "has_external_retainer": True,
                 "external_retainer": 20000,
-                "is_external_retainer_deducted": True
-            }
+                "is_external_retainer_deducted": True,
+            },
         }
         result = processor.process_from_dict(input_data)
 
@@ -196,7 +195,7 @@ class TestExternalRetainer:
                 "fixed_rate": 0.05,
                 "accumulated_success_fees_before_this_deal": 0,
                 "is_pay_as_you_go": False,
-                "contract_start_date": "2025-01-01"
+                "contract_start_date": "2025-01-01",
             },
             "state": {
                 "current_credit": 0,
@@ -204,7 +203,7 @@ class TestExternalRetainer:
                 "is_in_commissions_mode": True,
                 "future_subscription_fees": [],
                 "total_paid_this_contract_year": 0,
-                "total_paid_all_time": 0
+                "total_paid_all_time": 0,
             },
             "deal": {
                 "deal_name": "Retainer NOT Deducted",
@@ -216,8 +215,8 @@ class TestExternalRetainer:
                 "has_finra_fee": False,
                 "has_external_retainer": True,
                 "external_retainer": 100000,
-                "is_external_retainer_deducted": False
-            }
+                "is_external_retainer_deducted": False,
+            },
         }
         result = processor.process_from_dict(input_data)
 
@@ -243,11 +242,11 @@ class TestLehmanWithHistoricalProduction:
                 "lehman_tiers": [
                     {"lower_bound": 0, "upper_bound": 1000000, "rate": 0.05},
                     {"lower_bound": 1000000.01, "upper_bound": 5000000, "rate": 0.04},
-                    {"lower_bound": 5000000.01, "upper_bound": None, "rate": 0.03}
+                    {"lower_bound": 5000000.01, "upper_bound": None, "rate": 0.03},
                 ],
                 "accumulated_success_fees_before_this_deal": 4000000,  # Already did $4M
                 "is_pay_as_you_go": False,
-                "contract_start_date": "2025-01-01"
+                "contract_start_date": "2025-01-01",
             },
             "state": {
                 "current_credit": 0,
@@ -255,7 +254,7 @@ class TestLehmanWithHistoricalProduction:
                 "is_in_commissions_mode": True,
                 "future_subscription_fees": [],
                 "total_paid_this_contract_year": 0,
-                "total_paid_all_time": 0
+                "total_paid_all_time": 0,
             },
             "deal": {
                 "deal_name": "Lehman with History",
@@ -264,8 +263,8 @@ class TestLehmanWithHistoricalProduction:
                 "is_distribution_fee_true": False,
                 "is_sourcing_fee_true": False,
                 "is_deal_exempt": False,
-                "has_finra_fee": False
-            }
+                "has_finra_fee": False,
+            },
         }
         result = processor.process_from_dict(input_data)
 
@@ -285,11 +284,11 @@ class TestLehmanWithHistoricalProduction:
                     {"lower_bound": 0, "upper_bound": 1000000, "rate": 0.05},
                     {"lower_bound": 1000000.01, "upper_bound": 5000000, "rate": 0.04},
                     {"lower_bound": 5000000.01, "upper_bound": 10000000, "rate": 0.03},
-                    {"lower_bound": 10000000.01, "upper_bound": None, "rate": 0.02}
+                    {"lower_bound": 10000000.01, "upper_bound": None, "rate": 0.02},
                 ],
                 "accumulated_success_fees_before_this_deal": 0,
                 "is_pay_as_you_go": False,
-                "contract_start_date": "2025-01-01"
+                "contract_start_date": "2025-01-01",
             },
             "state": {
                 "current_credit": 0,
@@ -297,7 +296,7 @@ class TestLehmanWithHistoricalProduction:
                 "is_in_commissions_mode": True,
                 "future_subscription_fees": [],
                 "total_paid_this_contract_year": 0,
-                "total_paid_all_time": 0
+                "total_paid_all_time": 0,
             },
             "deal": {
                 "deal_name": "Lehman 3-Tier Cross",
@@ -306,8 +305,8 @@ class TestLehmanWithHistoricalProduction:
                 "is_distribution_fee_true": False,
                 "is_sourcing_fee_true": False,
                 "is_deal_exempt": False,
-                "has_finra_fee": False
-            }
+                "has_finra_fee": False,
+            },
         }
         result = processor.process_from_dict(input_data)
 
@@ -336,7 +335,7 @@ class TestCostCapScenarios:
                 "is_pay_as_you_go": False,
                 "contract_start_date": "2025-01-01",
                 "cost_cap_type": "annual",
-                "cost_cap_amount": 100000
+                "cost_cap_amount": 100000,
             },
             "state": {
                 "current_credit": 0,
@@ -344,7 +343,7 @@ class TestCostCapScenarios:
                 "is_in_commissions_mode": True,
                 "future_subscription_fees": [],
                 "total_paid_this_contract_year": 90000,  # Already paid $90k
-                "total_paid_all_time": 90000
+                "total_paid_all_time": 90000,
             },
             "deal": {
                 "deal_name": "Cost Cap - Annual Partial",
@@ -353,8 +352,8 @@ class TestCostCapScenarios:
                 "is_distribution_fee_true": False,
                 "is_sourcing_fee_true": False,
                 "is_deal_exempt": False,
-                "has_finra_fee": False
-            }
+                "has_finra_fee": False,
+            },
         }
         result = processor.process_from_dict(input_data)
 
@@ -376,7 +375,7 @@ class TestCostCapScenarios:
                 "is_pay_as_you_go": False,
                 "contract_start_date": "2023-01-01",
                 "cost_cap_type": "total",
-                "cost_cap_amount": 250000
+                "cost_cap_amount": 250000,
             },
             "state": {
                 "current_credit": 0,
@@ -384,7 +383,7 @@ class TestCostCapScenarios:
                 "is_in_commissions_mode": True,
                 "future_subscription_fees": [],
                 "total_paid_this_contract_year": 50000,
-                "total_paid_all_time": 250000  # Cap fully used
+                "total_paid_all_time": 250000,  # Cap fully used
             },
             "deal": {
                 "deal_name": "Cost Cap - Total Hit",
@@ -393,8 +392,8 @@ class TestCostCapScenarios:
                 "is_distribution_fee_true": False,
                 "is_sourcing_fee_true": False,
                 "is_deal_exempt": False,
-                "has_finra_fee": False
-            }
+                "has_finra_fee": False,
+            },
         }
         result = processor.process_from_dict(input_data)
 
@@ -419,7 +418,7 @@ class TestCostCapScenarios:
                 "is_pay_as_you_go": False,
                 "contract_start_date": "2025-01-01",
                 "cost_cap_type": "annual",
-                "cost_cap_amount": 100000
+                "cost_cap_amount": 100000,
             },
             "state": {
                 "current_credit": 0,
@@ -427,10 +426,10 @@ class TestCostCapScenarios:
                 "is_in_commissions_mode": False,
                 "future_subscription_fees": [
                     {"payment_id": "p1", "due_date": "2025-06-30", "amount_due": 50000, "amount_paid": 0},
-                    {"payment_id": "p2", "due_date": "2025-12-31", "amount_due": 50000, "amount_paid": 0}
+                    {"payment_id": "p2", "due_date": "2025-12-31", "amount_due": 50000, "amount_paid": 0},
                 ],
                 "total_paid_this_contract_year": 85000,  # Only $15k left in cap
-                "total_paid_all_time": 85000
+                "total_paid_all_time": 85000,
             },
             "deal": {
                 "deal_name": "Advance Priority Test",
@@ -439,8 +438,8 @@ class TestCostCapScenarios:
                 "is_distribution_fee_true": False,
                 "is_sourcing_fee_true": False,
                 "is_deal_exempt": False,
-                "has_finra_fee": False
-            }
+                "has_finra_fee": False,
+            },
         }
         result = processor.process_from_dict(input_data)
 
@@ -473,14 +472,14 @@ class TestPaygCostCapCombined:
                 "lehman_tiers": [
                     {"lower_bound": 0, "upper_bound": 1000000, "rate": 0.05},
                     {"lower_bound": 1000000.01, "upper_bound": 5000000, "rate": 0.04},
-                    {"lower_bound": 5000000.01, "upper_bound": None, "rate": 0.03}
+                    {"lower_bound": 5000000.01, "upper_bound": None, "rate": 0.03},
                 ],
                 "accumulated_success_fees_before_this_deal": 0,
                 "is_pay_as_you_go": True,
                 "annual_subscription": 10000,
                 "contract_start_date": "2025-01-01",
                 "cost_cap_type": "total",
-                "cost_cap_amount": 100000
+                "cost_cap_amount": 100000,
             },
             "state": {
                 "current_credit": 0,
@@ -489,7 +488,7 @@ class TestPaygCostCapCombined:
                 "future_subscription_fees": [],
                 "payg_commissions_accumulated": 0,
                 "total_paid_this_contract_year": 0,
-                "total_paid_all_time": 0
+                "total_paid_all_time": 0,
             },
             "deal": {
                 "deal_name": "PAYG + Cost Cap",
@@ -498,8 +497,8 @@ class TestPaygCostCapCombined:
                 "is_distribution_fee_true": False,
                 "is_sourcing_fee_true": False,
                 "is_deal_exempt": False,
-                "has_finra_fee": False
-            }
+                "has_finra_fee": False,
+            },
         }
         result = processor.process_from_dict(input_data)
 
@@ -531,7 +530,7 @@ class TestPaygCostCapCombined:
                 "annual_subscription": 10000,  # $10k ARR
                 "contract_start_date": "2025-01-01",
                 "cost_cap_type": "total",
-                "cost_cap_amount": 5000  # Only $5k cap!
+                "cost_cap_amount": 5000,  # Only $5k cap!
             },
             "state": {
                 "current_credit": 0,
@@ -540,7 +539,7 @@ class TestPaygCostCapCombined:
                 "future_subscription_fees": [],
                 "payg_commissions_accumulated": 0,
                 "total_paid_this_contract_year": 0,
-                "total_paid_all_time": 0
+                "total_paid_all_time": 0,
             },
             "deal": {
                 "deal_name": "PAYG Cap < ARR",
@@ -549,8 +548,8 @@ class TestPaygCostCapCombined:
                 "is_distribution_fee_true": False,
                 "is_sourcing_fee_true": False,
                 "is_deal_exempt": False,
-                "has_finra_fee": False
-            }
+                "has_finra_fee": False,
+            },
         }
         result = processor.process_from_dict(input_data)
 
@@ -582,7 +581,7 @@ class TestPaygCostCapCombined:
                 "annual_subscription": 10000,
                 "contract_start_date": "2025-01-01",
                 "cost_cap_type": "total",
-                "cost_cap_amount": 100000
+                "cost_cap_amount": 100000,
             },
             "state": {
                 "current_credit": 0,
@@ -591,7 +590,7 @@ class TestPaygCostCapCombined:
                 "future_subscription_fees": [],
                 "payg_commissions_accumulated": 0,
                 "total_paid_this_contract_year": 0,
-                "total_paid_all_time": 0
+                "total_paid_all_time": 0,
             },
             "deal": {
                 "deal_name": "PAYG Sequential 1",
@@ -600,8 +599,8 @@ class TestPaygCostCapCombined:
                 "is_distribution_fee_true": False,
                 "is_sourcing_fee_true": False,
                 "is_deal_exempt": False,
-                "has_finra_fee": False
-            }
+                "has_finra_fee": False,
+            },
         }
         result1 = processor.process_from_dict(input_data_1)
 
@@ -622,7 +621,7 @@ class TestPaygCostCapCombined:
                 "annual_subscription": 10000,
                 "contract_start_date": "2025-01-01",
                 "cost_cap_type": "total",
-                "cost_cap_amount": 100000
+                "cost_cap_amount": 100000,
             },
             "state": {
                 "current_credit": 0,
@@ -631,7 +630,7 @@ class TestPaygCostCapCombined:
                 "future_subscription_fees": [],
                 "payg_commissions_accumulated": 50000,
                 "total_paid_this_contract_year": 50000,
-                "total_paid_all_time": 50000  # $50k already paid
+                "total_paid_all_time": 50000,  # $50k already paid
             },
             "deal": {
                 "deal_name": "PAYG Sequential 2",
@@ -640,8 +639,8 @@ class TestPaygCostCapCombined:
                 "is_distribution_fee_true": False,
                 "is_sourcing_fee_true": False,
                 "is_deal_exempt": False,
-                "has_finra_fee": False
-            }
+                "has_finra_fee": False,
+            },
         }
         result2 = processor.process_from_dict(input_data_2)
 
@@ -675,7 +674,7 @@ class TestPaygEdgeCases:
                 "accumulated_success_fees_before_this_deal": 0,
                 "is_pay_as_you_go": True,
                 "annual_subscription": 10000,
-                "contract_start_date": "2025-01-01"
+                "contract_start_date": "2025-01-01",
             },
             "state": {
                 "current_credit": 0,
@@ -684,7 +683,7 @@ class TestPaygEdgeCases:
                 "future_subscription_fees": [],
                 "payg_commissions_accumulated": 7000,  # Already paid $7k toward $10k ARR
                 "total_paid_this_contract_year": 0,
-                "total_paid_all_time": 0
+                "total_paid_all_time": 0,
             },
             "deal": {
                 "deal_name": "PAYG Exact ARR",
@@ -693,8 +692,8 @@ class TestPaygEdgeCases:
                 "is_distribution_fee_true": False,
                 "is_sourcing_fee_true": False,
                 "is_deal_exempt": False,
-                "has_finra_fee": False
-            }
+                "has_finra_fee": False,
+            },
         }
         result = processor.process_from_dict(input_data)
 
@@ -716,7 +715,7 @@ class TestPaygEdgeCases:
                 "accumulated_success_fees_before_this_deal": 0,
                 "is_pay_as_you_go": True,
                 "annual_subscription": 10000,
-                "contract_start_date": "2025-01-01"
+                "contract_start_date": "2025-01-01",
             },
             "state": {
                 "current_credit": 0,
@@ -725,7 +724,7 @@ class TestPaygEdgeCases:
                 "future_subscription_fees": [],
                 "payg_commissions_accumulated": 8000,  # Already paid $8k toward $10k ARR
                 "total_paid_this_contract_year": 0,
-                "total_paid_all_time": 0
+                "total_paid_all_time": 0,
             },
             "deal": {
                 "deal_name": "PAYG Enter Mode",
@@ -734,8 +733,8 @@ class TestPaygEdgeCases:
                 "is_distribution_fee_true": False,
                 "is_sourcing_fee_true": False,
                 "is_deal_exempt": False,
-                "has_finra_fee": False
-            }
+                "has_finra_fee": False,
+            },
         }
         result = processor.process_from_dict(input_data)
 
@@ -756,7 +755,7 @@ class TestPaygEdgeCases:
                 "accumulated_success_fees_before_this_deal": 0,
                 "is_pay_as_you_go": True,
                 "annual_subscription": 10000,
-                "contract_start_date": "2025-01-01"
+                "contract_start_date": "2025-01-01",
             },
             "state": {
                 "current_credit": 0,
@@ -765,7 +764,7 @@ class TestPaygEdgeCases:
                 "future_subscription_fees": [],
                 "payg_commissions_accumulated": 15000,
                 "total_paid_this_contract_year": 15000,
-                "total_paid_all_time": 15000
+                "total_paid_all_time": 15000,
             },
             "deal": {
                 "deal_name": "PAYG - Pure Commissions",
@@ -774,8 +773,8 @@ class TestPaygEdgeCases:
                 "is_distribution_fee_true": False,
                 "is_sourcing_fee_true": False,
                 "is_deal_exempt": False,
-                "has_finra_fee": False
-            }
+                "has_finra_fee": False,
+            },
         }
         result = processor.process_from_dict(input_data)
 
@@ -801,7 +800,7 @@ class TestAdvanceFeesMultiplePayments:
                 "fixed_rate": 0.10,
                 "accumulated_success_fees_before_this_deal": 0,
                 "is_pay_as_you_go": False,
-                "contract_start_date": "2025-01-01"
+                "contract_start_date": "2025-01-01",
             },
             "state": {
                 "current_credit": 0,
@@ -811,10 +810,10 @@ class TestAdvanceFeesMultiplePayments:
                     {"payment_id": "p1", "due_date": "2025-03-31", "amount_due": 25000, "amount_paid": 0},
                     {"payment_id": "p2", "due_date": "2025-06-30", "amount_due": 25000, "amount_paid": 0},
                     {"payment_id": "p3", "due_date": "2025-09-30", "amount_due": 25000, "amount_paid": 10000},
-                    {"payment_id": "p4", "due_date": "2025-12-31", "amount_due": 25000, "amount_paid": 0}
+                    {"payment_id": "p4", "due_date": "2025-12-31", "amount_due": 25000, "amount_paid": 0},
                 ],
                 "total_paid_this_contract_year": 0,
-                "total_paid_all_time": 0
+                "total_paid_all_time": 0,
             },
             "deal": {
                 "deal_name": "Multi-Payment Advance",
@@ -823,8 +822,8 @@ class TestAdvanceFeesMultiplePayments:
                 "is_distribution_fee_true": False,
                 "is_sourcing_fee_true": False,
                 "is_deal_exempt": False,
-                "has_finra_fee": False
-            }
+                "has_finra_fee": False,
+            },
         }
         result = processor.process_from_dict(input_data)
 
@@ -866,7 +865,7 @@ class TestPartialDebtCollection:
                 "fixed_rate": 0.05,
                 "accumulated_success_fees_before_this_deal": 0,
                 "is_pay_as_you_go": False,
-                "contract_start_date": "2025-01-01"
+                "contract_start_date": "2025-01-01",
             },
             "state": {
                 "current_credit": 0,
@@ -875,7 +874,7 @@ class TestPartialDebtCollection:
                 "is_in_commissions_mode": False,
                 "future_subscription_fees": [],
                 "total_paid_this_contract_year": 0,
-                "total_paid_all_time": 0
+                "total_paid_all_time": 0,
             },
             "deal": {
                 "deal_name": "Partial Debt Collection",
@@ -884,8 +883,8 @@ class TestPartialDebtCollection:
                 "is_distribution_fee_true": False,
                 "is_sourcing_fee_true": False,
                 "is_deal_exempt": False,
-                "has_finra_fee": False
-            }
+                "has_finra_fee": False,
+            },
         }
         result = processor.process_from_dict(input_data)
 
@@ -912,11 +911,11 @@ class TestMaximumComplexity:
                 "rate_type": "lehman",
                 "lehman_tiers": [
                     {"lower_bound": 0, "upper_bound": 2000000, "rate": 0.05},
-                    {"lower_bound": 2000000.01, "upper_bound": None, "rate": 0.03}
+                    {"lower_bound": 2000000.01, "upper_bound": None, "rate": 0.03},
                 ],
                 "accumulated_success_fees_before_this_deal": 1500000,
                 "is_pay_as_you_go": False,
-                "contract_start_date": "2025-01-01"
+                "contract_start_date": "2025-01-01",
             },
             "state": {
                 "current_credit": 10000,
@@ -927,7 +926,7 @@ class TestMaximumComplexity:
                     {"payment_id": "p1", "due_date": "2025-06-30", "amount_due": 30000, "amount_paid": 5000}
                 ],
                 "total_paid_this_contract_year": 0,
-                "total_paid_all_time": 0
+                "total_paid_all_time": 0,
             },
             "deal": {
                 "deal_name": "Maximum Complexity",
@@ -939,8 +938,8 @@ class TestMaximumComplexity:
                 "has_finra_fee": True,
                 "has_external_retainer": True,
                 "external_retainer": 50000,
-                "is_external_retainer_deducted": True
-            }
+                "is_external_retainer_deducted": True,
+            },
         }
         result = processor.process_from_dict(input_data)
 

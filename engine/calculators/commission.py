@@ -46,7 +46,7 @@ class CommissionCalculator:
                 finalis_commissions=fees.implied_total,
                 entered_commissions_mode=False,
                 new_commissions_mode=True,
-                payg_arr_contribution=Decimal('0')
+                payg_arr_contribution=Decimal("0"),
             )
 
         if subscription.contract_fully_prepaid:
@@ -56,16 +56,16 @@ class CommissionCalculator:
                 finalis_commissions=subscription.implied_after_subscription,
                 entered_commissions_mode=True,
                 new_commissions_mode=True,
-                payg_arr_contribution=Decimal('0')
+                payg_arr_contribution=Decimal("0"),
             )
 
         # Not fully prepaid yet - no commissions
         return CommissionCalculation(
-            finalis_commissions_before_cap=Decimal('0'),
-            finalis_commissions=Decimal('0'),
+            finalis_commissions_before_cap=Decimal("0"),
+            finalis_commissions=Decimal("0"),
             entered_commissions_mode=False,
             new_commissions_mode=False,
-            payg_arr_contribution=Decimal('0')
+            payg_arr_contribution=Decimal("0"),
         )
 
     def _calculate_payg(self, ctx: ProcessingContext) -> CommissionCalculation:
@@ -84,7 +84,7 @@ class CommissionCalculator:
         accumulated = state.payg_commissions_accumulated
 
         # How much ARR is left to cover?
-        remaining_arr = max(Decimal('0'), arr - accumulated)
+        remaining_arr = max(Decimal("0"), arr - accumulated)
 
         if accumulated >= arr:
             # ARR already covered - all implied becomes commission
@@ -93,17 +93,17 @@ class CommissionCalculator:
                 finalis_commissions=implied_total,
                 entered_commissions_mode=False,
                 new_commissions_mode=True,
-                payg_arr_contribution=Decimal('0')
+                payg_arr_contribution=Decimal("0"),
             )
 
         if implied_total < remaining_arr:
             # All implied goes to ARR (not enough to cover yet)
             return CommissionCalculation(
-                finalis_commissions_before_cap=Decimal('0'),
-                finalis_commissions=Decimal('0'),
+                finalis_commissions_before_cap=Decimal("0"),
+                finalis_commissions=Decimal("0"),
                 entered_commissions_mode=False,
                 new_commissions_mode=False,
-                payg_arr_contribution=implied_total
+                payg_arr_contribution=implied_total,
             )
 
         # Implied covers remaining ARR (exactly or with excess)
@@ -115,5 +115,5 @@ class CommissionCalculator:
             finalis_commissions=commission_amount,
             entered_commissions_mode=True,
             new_commissions_mode=True,
-            payg_arr_contribution=remaining_arr
+            payg_arr_contribution=remaining_arr,
         )

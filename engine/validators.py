@@ -36,8 +36,7 @@ class InputValidator:
             # 3. Both are valid use cases - no validation error needed
             if deal.external_retainer <= 0:
                 raise ValueError(
-                    f"external_retainer must be positive when has_external_retainer=True, "
-                    f"got: {deal.external_retainer}"
+                    f"external_retainer must be positive when has_external_retainer=True, got: {deal.external_retainer}"
                 )
 
         if deal.has_preferred_rate:
@@ -64,16 +63,16 @@ class InputValidator:
 
     def _validate_contract(self, contract: Contract, deal: Deal, state: ContractState) -> None:
         """Validate contract-level constraints."""
-        if contract.rate_type not in ['fixed', 'lehman']:
+        if contract.rate_type not in ["fixed", "lehman"]:
             raise ValueError(f"Invalid rate_type: {contract.rate_type}. Must be 'fixed' or 'lehman'")
 
-        if contract.rate_type == 'fixed':
+        if contract.rate_type == "fixed":
             if contract.fixed_rate is None:
                 raise ValueError("fixed_rate is required when rate_type='fixed'")
             if not (0 <= contract.fixed_rate <= 1):
                 raise ValueError(f"fixed_rate must be between 0 and 1, got: {contract.fixed_rate}")
 
-        if contract.rate_type == 'lehman':
+        if contract.rate_type == "lehman":
             if not contract.lehman_tiers:
                 raise ValueError("lehman_tiers is required when rate_type='lehman'")
 
@@ -87,13 +86,9 @@ class InputValidator:
             return
 
         if state.current_credit > 0:
-            raise ValueError(
-                "Pay-As-You-Go contracts cannot have credit. "
-                "PAYG contracts have no credit system."
-            )
+            raise ValueError("Pay-As-You-Go contracts cannot have credit. PAYG contracts have no credit system.")
 
         if len(state.future_payments) > 0:
             raise ValueError(
-                "Pay-As-You-Go contracts cannot have future subscription fees. "
-                "PAYG has no subscription prepayments."
+                "Pay-As-You-Go contracts cannot have future subscription fees. PAYG has no subscription prepayments."
             )

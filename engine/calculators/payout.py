@@ -40,4 +40,4 @@ class PayoutCalculator:
         net -= commission.finalis_commissions
         net -= commission.payg_arr_contribution
 
-        return net.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        return net.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)

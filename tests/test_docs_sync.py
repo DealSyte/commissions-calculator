@@ -24,15 +24,15 @@ def extract_test_classes_and_methods(test_file: Path) -> dict[str, list[str]]:
     classes = {}
     current_class = None
 
-    for line in content.split('\n'):
-        class_match = re.match(r'^class (Test\w+)', line)
+    for line in content.split("\n"):
+        class_match = re.match(r"^class (Test\w+)", line)
         if class_match:
             current_class = class_match.group(1)
             classes[current_class] = []
             continue
 
         if current_class:
-            method_match = re.match(r'^\s+def (test_\w+)', line)
+            method_match = re.match(r"^\s+def (test_\w+)", line)
             if method_match:
                 classes[current_class].append(method_match.group(1))
 
@@ -43,8 +43,8 @@ def extract_documented_tests(doc_file: Path) -> tuple[set[str], set[str]]:
     """Extract class names and method names referenced in the documentation."""
     content = doc_file.read_text()
 
-    classes = set(re.findall(r'\*\*Test Class\*\*:\s*`(Test\w+)`', content))
-    methods = set(re.findall(r'\*\*Test Method\*\*:\s*`(test_\w+)`', content))
+    classes = set(re.findall(r"\*\*Test Class\*\*:\s*`(Test\w+)`", content))
+    methods = set(re.findall(r"\*\*Test Method\*\*:\s*`(test_\w+)`", content))
 
     return classes, methods
 
@@ -54,11 +54,11 @@ class TestDocumentationSync:
 
     @pytest.fixture
     def test_file(self) -> Path:
-        return get_project_root() / 'tests' / 'test_integration_scenarios.py'
+        return get_project_root() / "tests" / "test_integration_scenarios.py"
 
     @pytest.fixture
     def doc_file(self) -> Path:
-        return get_project_root() / 'docs' / 'test_scenarios_business_summary.md'
+        return get_project_root() / "docs" / "test_scenarios_business_summary.md"
 
     def test_doc_files_exist(self, test_file: Path, doc_file: Path):
         """Both files must exist."""
@@ -98,8 +98,7 @@ class TestDocumentationSync:
 
         stale = doc_classes - set(test_classes.keys())
         assert not stale, (
-            f"Documented classes no longer exist: {stale}\n"
-            f"Please update docs/test_scenarios_business_summary.md"
+            f"Documented classes no longer exist: {stale}\nPlease update docs/test_scenarios_business_summary.md"
         )
 
     def test_no_stale_method_documentation(self, test_file: Path, doc_file: Path):
@@ -113,6 +112,5 @@ class TestDocumentationSync:
 
         stale = doc_methods - all_methods
         assert not stale, (
-            f"Documented methods no longer exist: {stale}\n"
-            f"Please update docs/test_scenarios_business_summary.md"
+            f"Documented methods no longer exist: {stale}\nPlease update docs/test_scenarios_business_summary.md"
         )

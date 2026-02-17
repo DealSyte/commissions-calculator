@@ -64,7 +64,8 @@ jobs:
             --no-fail-on-empty-changeset \
             --stack-name finalis-engine-staging \
             --parameter-overrides Environment=staging \
-            --capabilities CAPABILITY_IAM
+            --capabilities CAPABILITY_IAM \
+            --resolve-s3
 
   # Deploy to PROD on version tags (v1.0.0, v2.1.0, etc.)
   deploy-prod:
@@ -92,4 +93,5 @@ jobs:
             --no-fail-on-empty-changeset \
             --stack-name finalis-engine-prod \
             --parameter-overrides Environment=prod \
-            --capabilities CAPABILITY_IAM
+            --capabilities CAPABILITY_IAM \
+            --resolve-s3

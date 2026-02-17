@@ -38,8 +38,8 @@ class DebtCollector:
             regular_collected = min(total_collected, state.current_debt)
             deferred_collected = total_collected - regular_collected
         else:
-            regular_collected = Decimal('0')
-            deferred_collected = Decimal('0')
+            regular_collected = Decimal("0")
+            deferred_collected = Decimal("0")
 
         return DebtCollection(
             total_collected=total_collected,
@@ -47,7 +47,7 @@ class DebtCollector:
             deferred_collected=deferred_collected,
             remaining_debt=state.current_debt - regular_collected,
             remaining_deferred=applicable_deferred - deferred_collected,
-            applicable_deferred=applicable_deferred
+            applicable_deferred=applicable_deferred,
         )
 
     def _get_applicable_deferred(self, ctx: ProcessingContext) -> Decimal:
@@ -67,7 +67,7 @@ class DebtCollector:
             for entry in state.deferred_schedule:
                 if entry.year == contract_year:
                     return entry.amount
-            return Decimal('0')
+            return Decimal("0")
 
         # Fallback to legacy single deferred
         return state.deferred_subscription_fee

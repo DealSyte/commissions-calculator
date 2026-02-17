@@ -13,11 +13,11 @@ from .payout import PayoutCalculator
 from .subscription import SubscriptionApplicator
 
 __all__ = [
-    'FeeCalculator',
-    'DebtCollector',
-    'CreditApplicator',
-    'SubscriptionApplicator',
-    'CommissionCalculator',
-    'CostCapEnforcer',
-    'PayoutCalculator'
+    "FeeCalculator",
+    "DebtCollector",
+    "CreditApplicator",
+    "SubscriptionApplicator",
+    "CommissionCalculator",
+    "CostCapEnforcer",
+    "PayoutCalculator",
 ]
