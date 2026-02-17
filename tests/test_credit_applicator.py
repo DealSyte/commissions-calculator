@@ -4,13 +4,12 @@ Unit Tests for Credit Applicator
 Tests verify credit generation and application logic.
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
+
 from engine.calculators.credit import CreditApplicator
-from engine.models import (
-    Deal, Contract, ContractState, ProcessingContext,
-    FeeCalculation, DebtCollection
-)
+from engine.models import Contract, ContractState, Deal, DebtCollection, FeeCalculation, ProcessingContext
 
 
 class TestCreditGeneration:
@@ -29,7 +28,7 @@ class TestCreditGeneration:
             is_in_commissions_mode=False
         )
         result = applicator.apply(ctx)
-        
+
         assert result.credit_from_debt == Decimal('5000')
         assert result.total_credit_available == Decimal('5000')
 
@@ -42,7 +41,7 @@ class TestCreditGeneration:
             is_in_commissions_mode=False
         )
         result = applicator.apply(ctx)
-        
+
         assert result.credit_from_debt == Decimal('3000')
         assert result.total_credit_available == Decimal('5000')
 
@@ -55,7 +54,7 @@ class TestCreditGeneration:
             is_payg=True
         )
         result = applicator.apply(ctx)
-        
+
         assert result.credit_from_debt == Decimal('0')
         assert result.total_credit_available == Decimal('0')
 
@@ -76,7 +75,7 @@ class TestCreditApplication:
             is_in_commissions_mode=False
         )
         result = applicator.apply(ctx)
-        
+
         assert result.credit_used == Decimal('3000')
         assert result.credit_remaining == Decimal('2000')
         assert result.implied_after_credit == Decimal('0')
@@ -90,7 +89,7 @@ class TestCreditApplication:
             is_in_commissions_mode=False
         )
         result = applicator.apply(ctx)
-        
+
         assert result.credit_used == Decimal('2000')
         assert result.credit_remaining == Decimal('0')
         assert result.implied_after_credit == Decimal('3000')
@@ -104,7 +103,7 @@ class TestCreditApplication:
             is_in_commissions_mode=False
         )
         result = applicator.apply(ctx)
-        
+
         assert result.credit_used == Decimal('0')
         assert result.implied_after_credit == Decimal('5000')
 
@@ -117,7 +116,7 @@ class TestCreditApplication:
             is_in_commissions_mode=True
         )
         result = applicator.apply(ctx)
-        
+
         # Credit not used, implied unchanged
         assert result.credit_used == Decimal('0')
         assert result.credit_remaining == Decimal('5000')
@@ -132,7 +131,7 @@ class TestCreditApplication:
             is_payg=True
         )
         result = applicator.apply(ctx)
-        
+
         assert result.credit_used == Decimal('0')
         assert result.credit_remaining == Decimal('0')
         assert result.implied_after_credit == Decimal('3000')

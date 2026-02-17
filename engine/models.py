@@ -7,9 +7,6 @@ All monetary values use Decimal for precision.
 
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Optional, List
-from datetime import date
-
 
 # =============================================================================
 # INPUT MODELS
@@ -19,7 +16,7 @@ from datetime import date
 class LehmanTier:
     """A single tier in a Lehman fee structure."""
     lower_bound: Decimal
-    upper_bound: Optional[Decimal]  # None = infinite
+    upper_bound: Decimal | None  # None = infinite
     rate: Decimal
 
     @classmethod
@@ -81,12 +78,12 @@ class Deal:
     include_retainer_in_fees: bool = True
     has_finra_fee: bool = True
     has_preferred_rate: bool = False
-    preferred_rate: Optional[Decimal] = None
+    preferred_rate: Decimal | None = None
 
     @property
     def total_for_calculations(self) -> Decimal:
         """Calculate the total value used for fee calculations.
-        
+
         When retainer is deducted (include_retainer_in_fees=True), all fees
         are calculated on the total including retainer for consistency.
         """
@@ -97,7 +94,7 @@ class Deal:
     @property
     def amount_for_dist_sourcing(self) -> Decimal:
         """Calculate the amount used for distribution/sourcing fee calculations.
-        
+
         When retainer is deducted, dist/sourcing use the same total as all other fees
         for consistency (Lehman, FINRA, etc. all use total_for_calculations).
         """
@@ -117,7 +114,7 @@ class Deal:
             has_external_retainer=data.get('has_external_retainer', False),
             # Support both 'include_retainer_in_fees' and legacy 'is_external_retainer_deducted'
             # When retainer is "deducted" from client payout, it means it's included in fee calculations
-            include_retainer_in_fees=data.get('include_retainer_in_fees', 
+            include_retainer_in_fees=data.get('include_retainer_in_fees',
                                                data.get('is_external_retainer_deducted', True)),
             has_finra_fee=data.get('has_finra_fee', True),
             has_preferred_rate=data.get('has_preferred_rate', False),
@@ -131,12 +128,12 @@ class Contract:
     rate_type: str  # 'fixed' or 'lehman'
     accumulated_success_fees: Decimal
     is_pay_as_you_go: bool = False
-    fixed_rate: Optional[Decimal] = None
-    lehman_tiers: List[LehmanTier] = field(default_factory=list)
-    contract_start_date: Optional[str] = None
+    fixed_rate: Decimal | None = None
+    lehman_tiers: list[LehmanTier] = field(default_factory=list)
+    contract_start_date: str | None = None
     annual_subscription: Decimal = Decimal('0')
-    cost_cap_type: Optional[str] = None  # 'annual', 'total', or None
-    cost_cap_amount: Optional[Decimal] = None
+    cost_cap_type: str | None = None  # 'annual', 'total', or None
+    cost_cap_amount: Decimal | None = None
 
     @classmethod
     def from_dict(cls, data: dict) -> 'Contract':
@@ -162,8 +159,8 @@ class ContractState:
     current_credit: Decimal
     current_debt: Decimal
     is_in_commissions_mode: bool
-    future_payments: List[FuturePayment] = field(default_factory=list)
-    deferred_schedule: List[DeferredEntry] = field(default_factory=list)
+    future_payments: list[FuturePayment] = field(default_factory=list)
+    deferred_schedule: list[DeferredEntry] = field(default_factory=list)
     deferred_subscription_fee: Decimal = Decimal('0')  # Legacy single deferred
     total_paid_this_contract_year: Decimal = Decimal('0')
     total_paid_all_time: Decimal = Decimal('0')
@@ -241,7 +238,7 @@ class SubscriptionApplication:
     """Results of advance subscription fee application."""
     advance_fees_created: Decimal = Decimal('0')
     contract_fully_prepaid: bool = False
-    updated_payments: List[dict] = field(default_factory=list)
+    updated_payments: list[dict] = field(default_factory=list)
     implied_after_subscription: Decimal = Decimal('0')
 
 
@@ -260,7 +257,7 @@ class CommissionCalculation:
 @dataclass
 class PaygTracking:
     """PAYG-specific tracking information.
-    
+
     Note: finalis_commissions_this_deal represents EXCESS commissions only
     (after ARR is covered). It does NOT include arr_contribution_this_deal.
     To calculate total Finalis charge, ADD arr_contribution_this_deal.
@@ -284,17 +281,17 @@ class ProcessingContext:
     contract: Contract
     initial_state: ContractState
     contract_year: int = 1
-    
+
     # Step results (populated as we go)
     fees: FeeCalculation = field(default_factory=FeeCalculation)
     debt: DebtCollection = field(default_factory=DebtCollection)
     credit: CreditApplication = field(default_factory=CreditApplication)
     subscription: SubscriptionApplication = field(default_factory=SubscriptionApplication)
     commission: CommissionCalculation = field(default_factory=CommissionCalculation)
-    
+
     # Final outputs
     net_payout: Decimal = Decimal('0')
-    payg_tracking: Optional[PaygTracking] = None
+    payg_tracking: PaygTracking | None = None
 
 
 @dataclass
@@ -305,4 +302,4 @@ class DealResult:
     state_changes: dict
     updated_future_payments: list
     updated_contract_state: dict
-    payg_tracking: Optional[dict] = None
+    payg_tracking: dict | None = None

@@ -4,10 +4,12 @@ Unit Tests for Fee Calculator
 Tests verify calculations against known expected values.
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
+
 from engine.calculators.fees import FeeCalculator, quantize_money
-from engine.models import Deal, Contract, ContractState, ProcessingContext, LehmanTier
+from engine.models import Contract, ContractState, Deal, LehmanTier, ProcessingContext
 
 
 class TestQuantizeMoney:

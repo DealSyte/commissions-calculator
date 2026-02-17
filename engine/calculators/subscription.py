@@ -5,9 +5,8 @@ Handles advance subscription fee creation from remaining implied costs.
 """
 
 from decimal import Decimal
-from typing import List, Tuple
-from .fees import quantize_money
-from ..models import ProcessingContext, SubscriptionApplication, FuturePayment
+
+from ..models import FuturePayment, ProcessingContext, SubscriptionApplication
 
 
 def to_money(value: Decimal) -> float:
@@ -21,16 +20,16 @@ class SubscriptionApplicator:
     def apply(self, ctx: ProcessingContext) -> SubscriptionApplication:
         """
         Apply remaining implied cost to future subscription payments.
-        
+
         For Standard Contracts:
         - Implied cost after credit is applied to future payments
         - Payments are applied in chronological order
-        
+
         For PAYG Contracts:
         - No subscription system - skip entirely
         """
         contract = ctx.contract
-        
+
         if contract.is_pay_as_you_go:
             return SubscriptionApplication(
                 advance_fees_created=Decimal('0'),
@@ -47,10 +46,10 @@ class SubscriptionApplicator:
     def _apply_standard(
         self,
         implied_remaining: Decimal,
-        future_payments: List[FuturePayment]
+        future_payments: list[FuturePayment]
     ) -> SubscriptionApplication:
         """Apply implied cost to future subscription payments."""
-        
+
         if implied_remaining <= 0:
             # No advance fees needed
             updated = self._format_payments_unchanged(future_payments)
@@ -77,7 +76,7 @@ class SubscriptionApplicator:
             Decimal(str(p['remaining'])) == Decimal('0')
             for p in updated_payments
         )
-        
+
         # Special case: no future payments = fully prepaid
         if len(future_payments) == 0:
             fully_prepaid = True
@@ -93,16 +92,16 @@ class SubscriptionApplicator:
 
     def _apply_to_payments(
         self,
-        payments: List[FuturePayment],
+        payments: list[FuturePayment],
         advance_amount: Decimal
-    ) -> Tuple[List[dict], Decimal]:
+    ) -> tuple[list[dict], Decimal]:
         """
         Apply advance amount to payments in chronological order.
         Returns (updated_payments, remaining_advance).
         """
         # Sort by due date
         sorted_payments = sorted(payments, key=lambda p: p.due_date)
-        
+
         remaining = advance_amount
         updated = []
 
@@ -131,7 +130,7 @@ class SubscriptionApplicator:
 
         return updated, remaining
 
-    def _format_payments_unchanged(self, payments: List[FuturePayment]) -> List[dict]:
+    def _format_payments_unchanged(self, payments: list[FuturePayment]) -> list[dict]:
         """Format payments without changes."""
         return [
             {

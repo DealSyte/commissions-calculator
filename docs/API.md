@@ -1,7 +1,20 @@
 # Finalis Engine API Documentation
 
 **Version:** 3.0  
-**Base URL:** `https://your-domain.com` or `http://localhost:8080`
+**Runtime:** AWS Lambda (production) / Flask (local development)
+
+---
+
+## Base URLs
+
+| Environment | URL |
+|-------------|-----|
+| **Production** | `https://{api-id}.execute-api.us-east-1.amazonaws.com/Prod` |
+| **Staging** | `https://{api-id}.execute-api.us-east-1.amazonaws.com/Prod` |
+| **Dev** | `https://{api-id}.execute-api.us-east-1.amazonaws.com/Prod` |
+| **Local** | `http://localhost:8080` |
+
+> **Note:** Each environment has its own API Gateway. Get the actual URL from the SAM deployment output or AWS Console.
 
 ---
 
@@ -55,7 +68,26 @@ Simple health check for monitoring.
 **Response:**
 ```json
 {
-  "status": "healthy"
+  "status": "healthy",
+  "environment": "dev"
+}
+```
+
+### `GET /api`
+API information endpoint.
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "message": "Finalis Commission Calculator API",
+  "version": "3.0",
+  "environment": "dev",
+  "runtime": "AWS Lambda",
+  "endpoints": {
+    "process_deal": "/process_deal [POST]",
+    "health": "/health [GET]"
+  }
 }
 ```
 

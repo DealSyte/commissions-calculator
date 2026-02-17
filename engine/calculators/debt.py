@@ -4,10 +4,10 @@ Debt Collection Calculator
 Handles collection of regular debt and deferred subscription fees.
 """
 
-from decimal import Decimal
 from datetime import datetime
-from .fees import quantize_money
-from ..models import ProcessingContext, DebtCollection, ContractState
+from decimal import Decimal
+
+from ..models import DebtCollection, ProcessingContext
 
 
 class DebtCollector:
@@ -16,7 +16,7 @@ class DebtCollector:
     def collect(self, ctx: ProcessingContext) -> DebtCollection:
         """
         Collect debt from the deal's success fees.
-        
+
         Order of collection:
         1. Regular debt (current_debt)
         2. Deferred subscription fees (based on contract year)
@@ -53,14 +53,13 @@ class DebtCollector:
     def _get_applicable_deferred(self, ctx: ProcessingContext) -> Decimal:
         """
         Get the deferred amount applicable to the current contract year.
-        
+
         Logic:
         - If deferred_schedule exists: use amount for current contract year
         - Else if deferred_subscription_fee exists (legacy): use that
         - Else: return 0
         """
         state = ctx.initial_state
-        contract = ctx.contract
 
         # Check for multi-year deferred schedule
         if state.deferred_schedule:
@@ -77,12 +76,12 @@ class DebtCollector:
     def calculate_contract_year(contract_start_date: str, deal_date: str) -> int:
         """
         Calculate which contract year we're in.
-        
+
         Uses fixed 365-day years (not calendar years) as per PRD:
         - Year 1 = days 0-364
         - Year 2 = days 365-729
         - etc.
-        
+
         NOTE: This intentionally does NOT account for leap years.
         Contract years are fixed 365-day periods for consistency.
         """

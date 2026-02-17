@@ -5,8 +5,8 @@ Constructs the final API response from processing context.
 """
 
 from decimal import Decimal
-from typing import Optional
-from .models import ProcessingContext, DealResult, PaygTracking
+
+from .models import DealResult, ProcessingContext
 
 
 def to_money(value: Decimal) -> float:
@@ -41,7 +41,7 @@ class OutputBuilder:
             "success_fees": to_money(deal.success_fees),
             "external_retainer": to_money(deal.external_retainer),
             "retainer_included_in_fees": (
-                deal.include_retainer_in_fees 
+                deal.include_retainer_in_fees
                 if deal.has_external_retainer else None
             ),
             "total_deal_value": to_money(deal.total_for_calculations),
@@ -58,12 +58,12 @@ class OutputBuilder:
         credit = ctx.credit
         subscription = ctx.subscription
         commission = ctx.commission
-        
+
         # Key values for descriptions
         total_amount = to_money(deal.total_for_calculations)
         success_fees = to_money(deal.success_fees)
         retainer = to_money(deal.external_retainer)
-        
+
         # Determine rate info for implied calculation
         if deal.has_preferred_rate and deal.preferred_rate:
             rate_desc = f"preferred rate ({float(deal.preferred_rate)*100:.2f}%)"
@@ -88,7 +88,7 @@ class OutputBuilder:
                 "value": total_amount,
                 "description": f"success_fee ({_fmt(success_fees)}) + retainer ({_fmt(retainer)}) = {_fmt(total_amount)}" if deal.has_external_retainer and deal.include_retainer_in_fees else f"success_fee ({_fmt(success_fees)}) - basis for all fee calculations"
             },
-            
+
             # Fee breakdown
             "finra_fee": {
                 "value": to_money(fees.finra_fee),
@@ -106,7 +106,7 @@ class OutputBuilder:
                 "value": to_money(fees.implied_total),
                 "description": f"Broker-dealer cost using {rate_desc} on {_fmt(total_amount)}"
             },
-            
+
             # Debt collection breakdown
             "debt_collected": {
                 "value": to_money(debt.total_collected),
@@ -120,11 +120,11 @@ class OutputBuilder:
                 "value": to_money(debt.deferred_collected),
                 "description": f"Unpaid subscription fees deferred from previous periods, collected for contract year {ctx.contract_year}"
             },
-            
+
             # Credit flow breakdown
             "credit_from_existing": {
                 "value": to_money(ctx.initial_state.current_credit),
-                "description": f"Pre-existing credit balance the member has accumulated from previous deals or payments, available to offset broker-dealer costs"
+                "description": "Pre-existing credit balance the member has accumulated from previous deals or payments, available to offset broker-dealer costs"
             },
             "credit_from_debt": {
                 "value": to_money(credit.credit_from_debt),
@@ -142,11 +142,11 @@ class OutputBuilder:
                 "value": to_money(credit.implied_after_credit),
                 "description": f"Remaining broker-dealer cost after credit is applied: {_fmt(to_money(fees.implied_total))} - {_fmt(to_money(credit.credit_used))} = {_fmt(to_money(credit.implied_after_credit))}"
             },
-            
+
             # Subscription breakdown
             "subscription_balance_before": {
                 "value": to_money(self._total_subscription_owed_before(ctx)),
-                "description": f"Total future subscription fees remaining to be prepaid before this deal. This determines whether remaining implied cost becomes advance fees or Finalis commissions."
+                "description": "Total future subscription fees remaining to be prepaid before this deal. This determines whether remaining implied cost becomes advance fees or Finalis commissions."
             },
             "advance_fees_created": {
                 "value": to_money(subscription.advance_fees_created),
@@ -154,27 +154,27 @@ class OutputBuilder:
             },
             "subscription_balance_after": {
                 "value": to_money(self._total_subscription_owed_after(ctx)),
-                "description": f"Remaining subscription balance after this deal. When this reaches $0, the contract is fully prepaid and enters commissions mode."
+                "description": "Remaining subscription balance after this deal. When this reaches $0, the contract is fully prepaid and enters commissions mode."
             },
             "implied_after_subscription": {
                 "value": to_money(subscription.implied_after_subscription),
                 "description": f"Remaining broker-dealer cost after subscription prepayment: {_fmt(to_money(credit.implied_after_credit))} - {_fmt(to_money(subscription.advance_fees_created))} = {_fmt(to_money(subscription.implied_after_subscription))}. This becomes Finalis commission if contract is fully prepaid."
             },
-            
+
             # Commission breakdown
             "finalis_commissions_before_cap": {
                 "value": to_money(commission.finalis_commissions_before_cap),
-                "description": f"Broker-dealer commission Finalis earns from this deal, calculated before any cost cap limits are applied. Only charged when contract subscription is fully prepaid."
+                "description": "Broker-dealer commission Finalis earns from this deal, calculated before any cost cap limits are applied. Only charged when contract subscription is fully prepaid."
             },
             "finalis_commissions": {
                 "value": to_money(commission.finalis_commissions),
-                "description": f"Final commission after applying {ctx.contract.cost_cap_type} cost cap of {_fmt(to_money(ctx.contract.cost_cap_amount))}: {_fmt(to_money(commission.finalis_commissions))}" if ctx.contract.cost_cap_type and commission.amount_not_charged_due_to_cap > 0 else f"Final broker-dealer commission charged to member. No cost cap limit was reached."
+                "description": f"Final commission after applying {ctx.contract.cost_cap_type} cost cap of {_fmt(to_money(ctx.contract.cost_cap_amount))}: {_fmt(to_money(commission.finalis_commissions))}" if ctx.contract.cost_cap_type and commission.amount_not_charged_due_to_cap > 0 else "Final broker-dealer commission charged to member. No cost cap limit was reached."
             },
             "amount_not_charged_due_to_cap": {
                 "value": to_money(commission.amount_not_charged_due_to_cap),
                 "description": f"Commission amount waived because the {ctx.contract.cost_cap_type} cost cap of {_fmt(to_money(ctx.contract.cost_cap_amount))} was exceeded" if ctx.contract.cost_cap_type and commission.amount_not_charged_due_to_cap > 0 else "No commission was waived - cost cap not reached or no cap configured"
             },
-            
+
             # Final payout
             "net_payout_to_client": {
                 "value": to_money(ctx.net_payout),
@@ -221,7 +221,7 @@ class OutputBuilder:
         # Calculate new payment totals (for cost cap tracking)
         # Include PAYG ARR contributions so cost caps are properly enforced
         payg_contribution = commission.payg_arr_contribution if contract.is_pay_as_you_go else Decimal('0')
-        
+
         new_paid_this_year = (
             state.total_paid_this_contract_year +
             subscription.advance_fees_created +
@@ -277,7 +277,7 @@ class OutputBuilder:
                 })
         return updated
 
-    def _build_payg_tracking(self, ctx: ProcessingContext) -> Optional[dict]:
+    def _build_payg_tracking(self, ctx: ProcessingContext) -> dict | None:
         """Build PAYG tracking section if applicable."""
         if not ctx.contract.is_pay_as_you_go or not ctx.payg_tracking:
             return None
@@ -308,19 +308,19 @@ class OutputBuilder:
         """Generate dynamic description for advance fees based on subscription state."""
         subscription = ctx.subscription
         credit = ctx.credit
-        
+
         implied_after_credit = to_money(credit.implied_after_credit)
         advance_created = to_money(subscription.advance_fees_created)
         sub_balance_before = to_money(self._total_subscription_owed_before(ctx))
         sub_balance_after = to_money(self._total_subscription_owed_after(ctx))
-        
+
         if sub_balance_before == 0:
             return f"No future subscription fees to prepay. Contract already fully prepaid - remaining implied cost ({_fmt(implied_after_credit)}) becomes Finalis commission."
-        
+
         if advance_created == 0:
-            return f"No advance fees created. Either no remaining implied cost after credit, or credit fully covered the broker-dealer cost."
-        
+            return "No advance fees created. Either no remaining implied cost after credit, or credit fully covered the broker-dealer cost."
+
         if sub_balance_after == 0:
             return f"Remaining implied cost ({_fmt(implied_after_credit)}) fully prepaid the remaining subscription balance ({_fmt(sub_balance_before)}). Contract is now fully prepaid. Any excess ({_fmt(to_money(subscription.implied_after_subscription))}) becomes Finalis commission."
-        
+
         return f"Subscription balance of {_fmt(sub_balance_before)} partially prepaid. Applied {_fmt(advance_created)} from remaining implied cost ({_fmt(implied_after_credit)}). Remaining subscription: {_fmt(sub_balance_after)}."

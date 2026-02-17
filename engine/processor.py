@@ -4,29 +4,27 @@ Deal Processor - Main Orchestrator
 Coordinates the deal processing pipeline through discrete, testable steps.
 """
 
-from decimal import Decimal, ROUND_HALF_UP
-from typing import Dict, Any
+from decimal import ROUND_HALF_UP, Decimal
+from typing import Any
 
-from .models import (
-    DealInput, DealResult, ProcessingContext, PaygTracking
-)
-from .validators import InputValidator
 from .calculators import (
-    FeeCalculator,
-    DebtCollector,
-    CreditApplicator,
-    SubscriptionApplicator,
     CommissionCalculator,
     CostCapEnforcer,
-    PayoutCalculator
+    CreditApplicator,
+    DebtCollector,
+    FeeCalculator,
+    PayoutCalculator,
+    SubscriptionApplicator,
 )
+from .models import DealInput, DealResult, PaygTracking, ProcessingContext
 from .output import OutputBuilder
+from .validators import InputValidator
 
 
 class DealProcessor:
     """
     Main orchestrator for deal processing.
-    
+
     Implements a clear pipeline pattern:
     1. Validate Input
     2. Build Context
@@ -55,10 +53,10 @@ class DealProcessor:
     def process(self, input_data: DealInput) -> DealResult:
         """
         Process a deal through the complete pipeline.
-        
+
         Args:
             input_data: Validated DealInput object
-            
+
         Returns:
             DealResult with all calculations and state updates
         """
@@ -96,10 +94,10 @@ class DealProcessor:
         # Step 10: Build output
         return self.output_builder.build(ctx)
 
-    def process_from_dict(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def process_from_dict(self, data: dict[str, Any]) -> dict[str, Any]:
         """
         Process a deal from raw dictionary input.
-        
+
         Convenience method for API usage.
         """
         input_data = DealInput.from_dict(data)
@@ -129,7 +127,7 @@ class DealProcessor:
         commission = ctx.commission
 
         arr = contract.annual_subscription
-        
+
         # Total accumulated = previous + this deal's contribution
         total_accumulated = (
             state.payg_commissions_accumulated +
@@ -153,7 +151,7 @@ class DealProcessor:
             arr_coverage_percentage=coverage_pct
         )
 
-    def _result_to_dict(self, result: DealResult) -> Dict[str, Any]:
+    def _result_to_dict(self, result: DealResult) -> dict[str, Any]:
         """Convert DealResult to dictionary for API response."""
         output = {
             "deal_summary": result.deal_summary,
@@ -171,7 +169,7 @@ class DealProcessor:
 # CONVENIENCE FUNCTIONS (Backward Compatibility)
 # =============================================================================
 
-def process_deal_from_dict(input_data: Dict[str, Any]) -> Dict[str, Any]:
+def process_deal_from_dict(input_data: dict[str, Any]) -> dict[str, Any]:
     """
     Process a deal from Python dict and return Python dict.
     Backward compatible with existing API.
@@ -186,7 +184,7 @@ def process_deal_from_json(json_input: str) -> str:
     Backward compatible with existing API.
     """
     import json
-    
+
     try:
         input_data = json.loads(json_input)
         processor = DealProcessor()

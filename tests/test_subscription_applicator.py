@@ -4,12 +4,19 @@ Unit Tests for Subscription Applicator
 Tests verify advance subscription fee application logic.
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
+
 from engine.calculators.subscription import SubscriptionApplicator
 from engine.models import (
-    Deal, Contract, ContractState, ProcessingContext,
-    FeeCalculation, DebtCollection, CreditApplication, FuturePayment
+    Contract,
+    ContractState,
+    CreditApplication,
+    Deal,
+    FeeCalculation,
+    FuturePayment,
+    ProcessingContext,
 )
 
 
@@ -29,9 +36,9 @@ class TestAdvanceFeeApplication:
             ]
         )
         result = applicator.apply(ctx)
-        
+
         assert result.advance_fees_created == Decimal('0')
-        assert result.contract_fully_prepaid == False
+        assert not result.contract_fully_prepaid
 
     def test_implied_fully_covers_single_payment(self, applicator):
         """Implied $5000 covers payment of $5000 exactly."""
@@ -42,9 +49,9 @@ class TestAdvanceFeeApplication:
             ]
         )
         result = applicator.apply(ctx)
-        
+
         assert result.advance_fees_created == Decimal('5000')
-        assert result.contract_fully_prepaid == True
+        assert result.contract_fully_prepaid
         assert result.updated_payments[0]['remaining'] == 0
 
     def test_implied_partially_covers_payment(self, applicator):
@@ -56,9 +63,9 @@ class TestAdvanceFeeApplication:
             ]
         )
         result = applicator.apply(ctx)
-        
+
         assert result.advance_fees_created == Decimal('3000')
-        assert result.contract_fully_prepaid == False
+        assert not result.contract_fully_prepaid
         assert result.updated_payments[0]['amount_paid'] == 3000
         assert result.updated_payments[0]['remaining'] == 2000
 
@@ -71,10 +78,10 @@ class TestAdvanceFeeApplication:
             ]
         )
         result = applicator.apply(ctx)
-        
+
         assert result.advance_fees_created == Decimal('5000')
         assert result.implied_after_subscription == Decimal('5000')
-        assert result.contract_fully_prepaid == True
+        assert result.contract_fully_prepaid
 
     def test_multiple_payments_chronological_order(self, applicator):
         """Payments are applied in chronological order."""
@@ -87,11 +94,11 @@ class TestAdvanceFeeApplication:
             ]
         )
         result = applicator.apply(ctx)
-        
+
         # Should apply to p1 (June) first, then p2 (Sept)
         # 4000 covers: p1 fully (2000) + p2 partially (2000)
         assert result.advance_fees_created == Decimal('4000')
-        
+
         # Find payments by ID
         payments_by_id = {p['payment_id']: p for p in result.updated_payments}
         assert payments_by_id['p1']['remaining'] == 0  # Fully paid
@@ -107,13 +114,13 @@ class TestAdvanceFeeApplication:
             ]
         )
         result = applicator.apply(ctx)
-        
+
         # Owed: 5000 - 2000 = 3000
         # Implied covers exactly 3000
         assert result.advance_fees_created == Decimal('3000')
         assert result.updated_payments[0]['amount_paid'] == 5000
         assert result.updated_payments[0]['remaining'] == 0
-        assert result.contract_fully_prepaid == True
+        assert result.contract_fully_prepaid
 
     def test_no_payments_is_fully_prepaid(self, applicator):
         """No future payments = contract fully prepaid."""
@@ -122,9 +129,9 @@ class TestAdvanceFeeApplication:
             payments=[]
         )
         result = applicator.apply(ctx)
-        
+
         assert result.advance_fees_created == Decimal('0')
-        assert result.contract_fully_prepaid == True
+        assert result.contract_fully_prepaid
         assert result.implied_after_subscription == Decimal('5000')
 
     def test_payg_skips_subscription_entirely(self, applicator):
@@ -137,9 +144,9 @@ class TestAdvanceFeeApplication:
             is_payg=True
         )
         result = applicator.apply(ctx)
-        
+
         assert result.advance_fees_created == Decimal('0')
-        assert result.contract_fully_prepaid == True
+        assert result.contract_fully_prepaid
         assert result.updated_payments == []
 
     def _make_context(

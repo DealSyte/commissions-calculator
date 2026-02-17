@@ -4,12 +4,18 @@ Unit Tests for Commission Calculator
 Tests verify commission calculation for Standard and PAYG contracts.
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
+
 from engine.calculators.commission import CommissionCalculator
 from engine.models import (
-    Deal, Contract, ContractState, ProcessingContext,
-    FeeCalculation, DebtCollection, CreditApplication, SubscriptionApplication
+    Contract,
+    ContractState,
+    Deal,
+    FeeCalculation,
+    ProcessingContext,
+    SubscriptionApplication,
 )
 
 
@@ -29,10 +35,10 @@ class TestStandardContractCommissions:
             is_in_commissions_mode=False
         )
         result = calculator.calculate(ctx)
-        
+
         assert result.finalis_commissions == Decimal('0')
-        assert result.new_commissions_mode == False
-        assert result.entered_commissions_mode == False
+        assert not result.new_commissions_mode
+        assert not result.entered_commissions_mode
 
     def test_commission_when_becomes_fully_prepaid(self, calculator):
         """When contract becomes fully prepaid, remaining implied becomes commission."""
@@ -43,10 +49,10 @@ class TestStandardContractCommissions:
             is_in_commissions_mode=False
         )
         result = calculator.calculate(ctx)
-        
+
         assert result.finalis_commissions == Decimal('2000')
-        assert result.new_commissions_mode == True
-        assert result.entered_commissions_mode == True
+        assert result.new_commissions_mode
+        assert result.entered_commissions_mode
 
     def test_all_implied_is_commission_when_already_in_commissions_mode(self, calculator):
         """Once in commissions mode, all implied becomes commission."""
@@ -57,11 +63,11 @@ class TestStandardContractCommissions:
             is_in_commissions_mode=True
         )
         result = calculator.calculate(ctx)
-        
+
         # All implied goes to commission, not subscription
         assert result.finalis_commissions == Decimal('5000')
-        assert result.new_commissions_mode == True
-        assert result.entered_commissions_mode == False  # Already was in mode
+        assert result.new_commissions_mode
+        assert not result.entered_commissions_mode  # Already was in mode
 
     def test_zero_implied_means_zero_commission(self, calculator):
         """Edge case: no implied cost."""
@@ -72,7 +78,7 @@ class TestStandardContractCommissions:
             is_in_commissions_mode=True
         )
         result = calculator.calculate(ctx)
-        
+
         assert result.finalis_commissions == Decimal('0')
 
     def _make_standard_context(
@@ -125,10 +131,10 @@ class TestPaygCommissions:
             accumulated=0
         )
         result = calculator.calculate(ctx)
-        
+
         assert result.payg_arr_contribution == Decimal('5000')
         assert result.finalis_commissions == Decimal('0')
-        assert result.new_commissions_mode == False
+        assert not result.new_commissions_mode
 
     def test_all_implied_to_commission_when_arr_already_covered(self, calculator):
         """When ARR fully covered, all implied becomes commission."""
@@ -138,10 +144,10 @@ class TestPaygCommissions:
             accumulated=10000  # ARR already met
         )
         result = calculator.calculate(ctx)
-        
+
         assert result.payg_arr_contribution == Decimal('0')
         assert result.finalis_commissions == Decimal('5000')
-        assert result.new_commissions_mode == True
+        assert result.new_commissions_mode
 
     def test_partial_arr_partial_commission(self, calculator):
         """When deal partially covers remaining ARR."""
@@ -151,12 +157,12 @@ class TestPaygCommissions:
             accumulated=8000  # 2000 remaining to cover
         )
         result = calculator.calculate(ctx)
-        
+
         # 2000 fills ARR, 3000 becomes commission
         assert result.payg_arr_contribution == Decimal('2000')
         assert result.finalis_commissions == Decimal('3000')
-        assert result.new_commissions_mode == True
-        assert result.entered_commissions_mode == True
+        assert result.new_commissions_mode
+        assert result.entered_commissions_mode
 
     def test_exactly_covers_arr(self, calculator):
         """Deal exactly covers remaining ARR - enters commissions mode."""
@@ -166,12 +172,12 @@ class TestPaygCommissions:
             accumulated=5000  # Exactly 5000 remaining
         )
         result = calculator.calculate(ctx)
-        
+
         assert result.payg_arr_contribution == Decimal('5000')
         assert result.finalis_commissions == Decimal('0')
         # ARR fully covered = entered commissions mode (even with no excess)
-        assert result.new_commissions_mode == True
-        assert result.entered_commissions_mode == True
+        assert result.new_commissions_mode
+        assert result.entered_commissions_mode
 
     def test_arr_over_covered(self, calculator):
         """Accumulated already exceeds ARR."""
@@ -181,7 +187,7 @@ class TestPaygCommissions:
             accumulated=15000  # Way over ARR
         )
         result = calculator.calculate(ctx)
-        
+
         assert result.payg_arr_contribution == Decimal('0')
         assert result.finalis_commissions == Decimal('5000')
 

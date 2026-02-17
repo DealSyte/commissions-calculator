@@ -4,7 +4,8 @@ Payout Calculator
 Calculates the net payout to the client after all deductions.
 """
 
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
+
 from ..models import ProcessingContext
 
 
@@ -14,7 +15,7 @@ class PayoutCalculator:
     def calculate(self, ctx: ProcessingContext) -> Decimal:
         """
         Calculate net payout after all deductions.
-        
+
         Net Payout = Success Fees
                    - Debt Collected
                    - FINRA Fee

@@ -5,8 +5,7 @@ Validates all input data before processing begins.
 Raises ValueError with clear messages for any constraint violations.
 """
 
-from decimal import Decimal
-from .models import DealInput, Deal, Contract, ContractState
+from .models import Contract, ContractState, Deal, DealInput
 
 
 class InputValidator:

@@ -1,8 +1,10 @@
-from flask import Flask, request, jsonify, send_from_directory, make_response
-from flask_cors import CORS
-from engine import DealProcessor
-import os
 import logging
+import os
+
+from flask import Flask, jsonify, make_response, request, send_from_directory
+from flask_cors import CORS
+
+from engine import DealProcessor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

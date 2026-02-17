@@ -4,12 +4,19 @@ Unit Tests for Cost Cap Enforcer
 Tests verify cost cap limits are applied correctly.
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
+
 from engine.calculators.cost_cap import CostCapEnforcer
 from engine.models import (
-    Deal, Contract, ContractState, ProcessingContext,
-    FeeCalculation, SubscriptionApplication, CommissionCalculation
+    CommissionCalculation,
+    Contract,
+    ContractState,
+    Deal,
+    FeeCalculation,
+    ProcessingContext,
+    SubscriptionApplication,
 )
 
 
@@ -30,7 +37,7 @@ class TestCostCapEnforcement:
             total_paid=0
         )
         result = enforcer.apply(ctx)
-        
+
         assert result.finalis_commissions == Decimal('5000')
         assert result.amount_not_charged_due_to_cap == Decimal('0')
 
@@ -44,7 +51,7 @@ class TestCostCapEnforcement:
             total_paid=0  # Nothing paid yet this year
         )
         result = enforcer.apply(ctx)
-        
+
         # 3000 + 5000 = 8000, under 20000 cap
         assert result.finalis_commissions == Decimal('5000')
         assert result.amount_not_charged_due_to_cap == Decimal('0')
@@ -60,7 +67,7 @@ class TestCostCapEnforcement:
             implied_total=8000  # 3000 + 5000 = total we'd want to charge
         )
         result = enforcer.apply(ctx)
-        
+
         # Available space: 10000 - 5000 = 5000
         # Advance fees (3000) have priority
         # Space for commissions: 5000 - 3000 = 2000
@@ -78,7 +85,7 @@ class TestCostCapEnforcement:
             total_paid=48000  # Almost at lifetime cap
         )
         result = enforcer.apply(ctx)
-        
+
         # Available space: 50000 - 48000 = 2000
         assert result.finalis_commissions == Decimal('2000')
 
@@ -92,7 +99,7 @@ class TestCostCapEnforcement:
             total_paid=8000  # Only 2000 space left
         )
         result = enforcer.apply(ctx)
-        
+
         # Available: 10000 - 8000 = 2000
         # Advance fees: 4000 (already committed, exceeds space alone!)
         # Commissions get: max(0, 2000 - 4000) = 0
@@ -108,7 +115,7 @@ class TestCostCapEnforcement:
             total_paid=10000  # Already at cap
         )
         result = enforcer.apply(ctx)
-        
+
         assert result.finalis_commissions == Decimal('0')
 
     def test_invalid_cap_type_ignored(self, enforcer):
@@ -121,7 +128,7 @@ class TestCostCapEnforcement:
             total_paid=0
         )
         result = enforcer.apply(ctx)
-        
+
         # Invalid cap type = no cap
         assert result.finalis_commissions == Decimal('5000')
 
@@ -139,11 +146,11 @@ class TestCostCapEnforcement:
         ctx.commission.new_commissions_mode = True
         # Note: payg_arr_contribution is not preserved for non-PAYG contracts
         # because non-PAYG contracts shouldn't have ARR contributions
-        
+
         result = enforcer.apply(ctx)
-        
-        assert result.entered_commissions_mode == True
-        assert result.new_commissions_mode == True
+
+        assert result.entered_commissions_mode
+        assert result.new_commissions_mode
         # For non-PAYG, ARR contribution is always 0
         assert result.payg_arr_contribution == Decimal('0')
         # But commissions were capped

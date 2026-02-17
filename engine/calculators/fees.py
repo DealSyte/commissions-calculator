@@ -5,9 +5,9 @@ Each calculator is responsible for a specific type of fee calculation.
 All use Decimal for precision with ROUND_HALF_UP rounding.
 """
 
-from decimal import Decimal, ROUND_HALF_UP
-from typing import List
-from ..models import LehmanTier, ProcessingContext, FeeCalculation
+from decimal import ROUND_HALF_UP, Decimal
+
+from ..models import FeeCalculation, LehmanTier, ProcessingContext
 
 
 def quantize_money(value: Decimal) -> Decimal:
@@ -58,7 +58,7 @@ class FeeCalculator:
     def _calculate_implied(self, ctx: ProcessingContext) -> Decimal:
         """
         Calculate IMPLIED (BD Cost).
-        
+
         Priority order:
         1. Preferred Rate (deal-specific override)
         2. Deal Exempt (1.5%)
@@ -94,12 +94,12 @@ class FeeCalculator:
     def _calculate_lehman(
         self,
         deal_amount: Decimal,
-        tiers: List[LehmanTier],
+        tiers: list[LehmanTier],
         accumulated_before: Decimal
     ) -> Decimal:
         """
         Calculate implied using Lehman progressive tiers.
-        
+
         Handles:
         - Historical accumulation (starts at correct tier)
         - Gaps between tiers (jumps to next tier)

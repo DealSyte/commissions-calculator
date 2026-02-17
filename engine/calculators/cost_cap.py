@@ -5,7 +5,8 @@ Applies cost cap limits to Finalis commissions.
 """
 
 from decimal import Decimal
-from ..models import ProcessingContext, CommissionCalculation
+
+from ..models import CommissionCalculation, ProcessingContext
 
 
 class CostCapEnforcer:
@@ -14,14 +15,14 @@ class CostCapEnforcer:
     def apply(self, ctx: ProcessingContext) -> CommissionCalculation:
         """
         Apply cost cap if configured.
-        
+
         Cost cap types:
         - "annual": Limits total_paid_this_contract_year
         - "total": Limits total_paid_all_time
-        
+
         Priority: Advance fees take priority over commissions.
         If cap is exceeded, commissions are reduced first.
-        
+
         For PAYG contracts, the cost cap applies to the TOTAL going to Finalis
         (ARR contribution + excess commissions), not just the excess.
         """
@@ -64,7 +65,7 @@ class CostCapEnforcer:
 
         # We exceed the cap - reduce Finalis amounts (advance fees have priority)
         space_for_finalis = max(Decimal('0'), available_space - advance_fees)
-        
+
         # For PAYG, we need to re-split the capped total between ARR and excess
         # ARR has priority over excess commissions
         if contract.is_pay_as_you_go:
@@ -72,7 +73,7 @@ class CostCapEnforcer:
             arr_after_cap = min(payg_arr, space_for_finalis)
             # Remainder goes to excess commissions
             excess_after_cap = max(Decimal('0'), space_for_finalis - arr_after_cap)
-            
+
             # Recalculate entered_commissions_mode based on actual ARR coverage
             # If ARR contribution was reduced by cap, we may not have fully covered ARR
             if arr_after_cap < payg_arr:

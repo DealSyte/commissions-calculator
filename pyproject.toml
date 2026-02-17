@@ -1,12 +1,44 @@
 [project]
 name = "finalis-engine-api"
-version = "2.0.0"
-description = "Finalis Contract Processing Engine API"
-authors = ["Your Name <you@example.com>"]
-requires-python = ">=3.11"
-dependencies = [
-    "flask>=3.0.0",
-    "flask-cors>=4.0.0"
+version = "3.0.0"
+description = "Finalis Contract Engine - Commission Calculator API"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "flask>=3.1.0",
+    "flask-cors>=5.0.0",
+    "pytest>=9.0.0",
+    "ruff>=0.4.0",
 ]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+exclude = [
+    "tests/old_tests.py",  # Legacy test file with many whitespace issues
+]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*.py" = ["E712"]  # Allow == True/False in tests for readability
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
 
 

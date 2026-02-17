@@ -153,11 +153,30 @@ A structured JSON object containing:
 
 ## 5. Deployment Requirements
 
+### Production (AWS Lambda)
+
 | Component | Specification |
 |-----------|---------------|
-| **Server** | Flask (v3.1.0) running on Gunicorn (v21.2.0) |
-| **CORS** | Must be enabled globally to support frontend integrations (e.g., Lovable/N8N) |
-| **Runtime** | Python 3.11+ required |
+| **Runtime** | AWS Lambda with Python 3.12 |
+| **Entry Point** | `lambda_handler.lambda_handler` |
+| **Infrastructure** | AWS SAM (Serverless Application Model) |
+| **API Gateway** | Managed by SAM, handles routing and CORS |
+| **Dependencies** | Zero external dependencies (stdlib only) |
+
+### Environments
+
+| Environment | Stack Name | Trigger |
+|-------------|------------|---------|
+| **Staging** | `finalis-engine-staging` | Push to `main` branch |
+| **Production** | `finalis-engine-prod` | Version tag (`v*.*.*`) |
+
+### Local Development
+
+| Component | Specification |
+|-----------|---------------|
+| **Server** | Flask (v3.1.0) for local testing |
+| **Entry Point** | `main.py` |
+| **CORS** | Enabled via flask-cors |
 
 ---
 

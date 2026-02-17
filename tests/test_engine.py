@@ -4,10 +4,10 @@ Tests for Finalis Contract Engine
 Run with: python -m pytest tests/ -v
 """
 
+
 import pytest
-from decimal import Decimal
+
 from engine import DealProcessor
-from engine.models import DealInput
 
 
 class TestDealProcessor:
@@ -87,7 +87,7 @@ class TestDealProcessor:
         # Implied is 5000, future payment is 10000
         # Should create 5000 in advance fees
         assert result["calculations"]["advance_fees_created"]["value"] == 5000.0
-        
+
         # Check the payment was updated
         assert len(result["updated_future_payments"]) == 1
         payment = result["updated_future_payments"][0]
@@ -100,7 +100,7 @@ class TestDealProcessor:
 
         # Future payment has 5000 remaining, so not in commissions mode
         assert result["calculations"]["finalis_commissions"]["value"] == 0
-        assert result["state_changes"]["contract_fully_prepaid"] == False
+        assert not result["state_changes"]["contract_fully_prepaid"]
 
     def test_commissions_when_fully_prepaid(self, processor, sample_input):
         """Test commissions occur when subscription is fully prepaid."""
@@ -113,8 +113,8 @@ class TestDealProcessor:
         # Should be 3000 advance fees + 2000 commissions
         assert result["calculations"]["advance_fees_created"]["value"] == 3000.0
         assert result["calculations"]["finalis_commissions"]["value"] == 2000.0
-        assert result["state_changes"]["contract_fully_prepaid"] == True
-        assert result["state_changes"]["entered_commissions_mode"] == True
+        assert result["state_changes"]["contract_fully_prepaid"]
+        assert result["state_changes"]["entered_commissions_mode"]
 
     def test_finra_fee_exempt(self, processor, sample_input):
         """Test FINRA fee can be disabled."""
@@ -317,7 +317,7 @@ class TestBackwardCompatibility:
         from finalis_engine import FinalisEngine
 
         engine = FinalisEngine()
-        
+
         result = engine.process_deal({
             "contract": {
                 "rate_type": "fixed",

@@ -5,7 +5,8 @@ Handles Finalis commission calculation for both Standard and PAYG contracts.
 """
 
 from decimal import Decimal
-from ..models import ProcessingContext, CommissionCalculation
+
+from ..models import CommissionCalculation, ProcessingContext
 
 
 class CommissionCalculator:
@@ -14,11 +15,11 @@ class CommissionCalculator:
     def calculate(self, ctx: ProcessingContext) -> CommissionCalculation:
         """
         Calculate Finalis commissions.
-        
+
         Standard Contracts:
         - Commissions occur after contract is fully prepaid
         - Any remaining implied after subscription becomes commission
-        
+
         PAYG Contracts:
         - Implied first fills the ARR bucket
         - Only after ARR is covered does implied become commission
@@ -27,7 +28,7 @@ class CommissionCalculator:
 
         if contract.is_pay_as_you_go:
             return self._calculate_payg(ctx)
-        
+
         return self._calculate_standard(ctx)
 
     def _calculate_standard(self, ctx: ProcessingContext) -> CommissionCalculation:
@@ -70,7 +71,7 @@ class CommissionCalculator:
     def _calculate_payg(self, ctx: ProcessingContext) -> CommissionCalculation:
         """
         Calculate commissions for Pay-As-You-Go contracts.
-        
+
         Logic:
         - Implied first fills the ARR (annual_subscription) bucket
         - Once ARR is covered, additional implied becomes Finalis commission
@@ -108,7 +109,7 @@ class CommissionCalculator:
         # Implied covers remaining ARR (exactly or with excess)
         # Either way, we've entered commissions mode
         commission_amount = implied_total - remaining_arr
-        
+
         return CommissionCalculation(
             finalis_commissions_before_cap=commission_amount,
             finalis_commissions=commission_amount,

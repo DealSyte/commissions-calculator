@@ -14,8 +14,9 @@ to keep them in sync. The summary provides plain-English explanations of
 each test scenario for business stakeholders.
 """
 
+
 import pytest
-from decimal import Decimal
+
 from engine import DealProcessor
 
 
@@ -406,7 +407,7 @@ class TestCostCapScenarios:
 
     def test_advance_fees_have_priority_in_cap(self, processor):
         """Advance fees are created before cost cap is applied to commissions.
-        
+
         Note: Cost cap applies to Finalis commissions, not advance subscription prepayments.
         Advance fees are subscriptions being prepaid, which is a separate category.
         """
@@ -462,7 +463,7 @@ class TestPaygCostCapCombined:
 
     def test_payg_with_cost_cap(self, processor):
         """PAYG contract with cost cap applies both rules.
-        
+
         The cost cap applies to the TOTAL going to Finalis (ARR + excess).
         When capped, ARR has priority over excess commissions.
         """
@@ -506,19 +507,19 @@ class TestPaygCostCapCombined:
         # Cost cap: $100k (total to Finalis, including ARR)
         # Amount not charged: $30k
         assert result["calculations"]["implied_total"]["value"] == 130000.0
-        
+
         # Cost cap applies to total (ARR + excess), not just excess
         # ARR has priority: $10k ARR, then $90k excess
         assert result["payg_tracking"]["arr_contribution_this_deal"] == 10000.0
         assert result["payg_tracking"]["finalis_commissions_this_deal"] == 90000.0
-        
+
         # finalis_commissions = excess only (after ARR)
         assert result["calculations"]["finalis_commissions"]["value"] == 90000.0
         assert result["calculations"]["amount_not_charged_due_to_cap"]["value"] == 30000.0
 
     def test_payg_cost_cap_smaller_than_arr(self, processor):
         """When cost cap is smaller than ARR, even ARR gets capped.
-        
+
         Edge case: If cost cap is $5k and ARR is $10k, only $5k can go to ARR.
         """
         input_data = {
@@ -561,13 +562,13 @@ class TestPaygCostCapCombined:
         assert result["payg_tracking"]["finalis_commissions_this_deal"] == 0
         assert result["calculations"]["finalis_commissions"]["value"] == 0
         assert result["calculations"]["amount_not_charged_due_to_cap"]["value"] == 20000.0
-        
+
         # ARR not fully covered, so not in commissions mode yet
-        assert result["state_changes"]["entered_commissions_mode"] == False
+        assert not result["state_changes"]["entered_commissions_mode"]
 
     def test_payg_cost_cap_sequential_deals(self, processor):
         """Multiple PAYG deals gradually hitting the cost cap.
-        
+
         Deal 1: Uses $50k of $100k cap
         Deal 2: Uses remaining $50k, gets capped
         """
@@ -610,7 +611,7 @@ class TestPaygCostCapCombined:
         assert result1["payg_tracking"]["arr_contribution_this_deal"] == 10000.0
         assert result1["payg_tracking"]["finalis_commissions_this_deal"] == 40000.0
         assert result1["calculations"]["amount_not_charged_due_to_cap"]["value"] == 0
-        
+
         # Deal 2: Uses state from Deal 1, hits cap
         input_data_2 = {
             "contract": {
@@ -663,7 +664,7 @@ class TestPaygEdgeCases:
 
     def test_payg_exactly_hitting_arr_target(self, processor):
         """PAYG deal exactly covers remaining ARR, no excess.
-        
+
         Business expectation: When ARR is fully covered (even if exactly),
         entered_commissions_mode should be True.
         """
@@ -704,7 +705,7 @@ class TestPaygEdgeCases:
         assert result["payg_tracking"]["arr_contribution_this_deal"] == 3000.0
         assert result["payg_tracking"]["finalis_commissions_this_deal"] == 0
         # Business expectation: ARR fully covered means entered commissions mode
-        assert result["state_changes"]["entered_commissions_mode"] == True
+        assert result["state_changes"]["entered_commissions_mode"]
 
     def test_payg_entering_commissions_mode(self, processor):
         """PAYG transitions to commissions mode when ARR covered."""
@@ -744,7 +745,7 @@ class TestPaygEdgeCases:
         # Excess commission: $3,000
         assert result["payg_tracking"]["arr_contribution_this_deal"] == 2000.0
         assert result["payg_tracking"]["finalis_commissions_this_deal"] == 3000.0
-        assert result["state_changes"]["entered_commissions_mode"] == True
+        assert result["state_changes"]["entered_commissions_mode"]
 
     def test_payg_already_in_commissions_mode(self, processor):
         """PAYG already in commissions mode, all to excess."""
@@ -832,14 +833,14 @@ class TestAdvanceFeesMultiplePayments:
         # Advance created: min($80k, $90k) = $80k
         assert result["calculations"]["implied_total"]["value"] == 80000.0
         assert result["calculations"]["advance_fees_created"]["value"] == 80000.0
-        
+
         # Check payments updated
         payments = result["updated_future_payments"]
         p1 = next(p for p in payments if p["payment_id"] == "p1")
         p2 = next(p for p in payments if p["payment_id"] == "p2")
         p3 = next(p for p in payments if p["payment_id"] == "p3")
         p4 = next(p for p in payments if p["payment_id"] == "p4")
-        
+
         # p1: fully paid (0 remaining)
         assert p1["remaining"] == 0
         # p2: fully paid (0 remaining)
@@ -948,13 +949,13 @@ class TestMaximumComplexity:
         assert result["calculations"]["finra_fee"]["value"] > 0
         assert result["calculations"]["distribution_fee"]["value"] == 105000.0  # 10% of $1.05M
         assert result["calculations"]["sourcing_fee"]["value"] == 105000.0  # 10% of $1.05M
-        
+
         # Verify debt was collected
         assert result["calculations"]["debt_collected"]["value"] == 40000.0  # 15k + 25k
-        
+
         # Verify total includes retainer
         assert result["deal_summary"]["total_deal_value"] == 1050000.0
-        
+
         # Verify implied is calculated correctly with Lehman + historical
         # Historical: $1.5M (in Tier 1)
         # New deal total: $1.05M

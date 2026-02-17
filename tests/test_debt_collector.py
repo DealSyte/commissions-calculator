@@ -4,13 +4,12 @@ Unit Tests for Debt Collector
 Tests verify debt collection logic against known scenarios.
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
+
 from engine.calculators.debt import DebtCollector
-from engine.models import (
-    Deal, Contract, ContractState, ProcessingContext, 
-    DeferredEntry, FeeCalculation
-)
+from engine.models import Contract, ContractState, Deal, DeferredEntry, FeeCalculation, ProcessingContext
 
 
 class TestContractYearCalculation:
@@ -58,7 +57,7 @@ class TestDebtCollection:
             deferred=0
         )
         result = collector.collect(ctx)
-        
+
         assert result.total_collected == Decimal('0')
         assert result.regular_debt_collected == Decimal('0')
         assert result.deferred_collected == Decimal('0')
@@ -71,7 +70,7 @@ class TestDebtCollection:
             deferred=0
         )
         result = collector.collect(ctx)
-        
+
         assert result.total_collected == Decimal('5000')
         assert result.regular_debt_collected == Decimal('5000')
         assert result.remaining_debt == Decimal('0')
@@ -84,7 +83,7 @@ class TestDebtCollection:
             deferred=0
         )
         result = collector.collect(ctx)
-        
+
         assert result.total_collected == Decimal('3000')
         assert result.regular_debt_collected == Decimal('3000')
         assert result.remaining_debt == Decimal('2000')
@@ -97,7 +96,7 @@ class TestDebtCollection:
             deferred=5000
         )
         result = collector.collect(ctx)
-        
+
         # Total debt is 10k, but only 7k available
         # Should collect all 5k regular, then 2k deferred
         assert result.total_collected == Decimal('7000')
@@ -114,7 +113,7 @@ class TestDebtCollection:
             deferred=3000
         )
         result = collector.collect(ctx)
-        
+
         assert result.total_collected == Decimal('3000')
         assert result.regular_debt_collected == Decimal('0')
         assert result.deferred_collected == Decimal('3000')
@@ -134,7 +133,7 @@ class TestDebtCollection:
             contract_year=2
         )
         result = collector.collect(ctx)
-        
+
         # Year 2 deferred is 2000
         assert result.applicable_deferred == Decimal('2000')
         assert result.deferred_collected == Decimal('2000')
@@ -152,7 +151,7 @@ class TestDebtCollection:
             contract_year=5  # Not in schedule
         )
         result = collector.collect(ctx)
-        
+
         assert result.applicable_deferred == Decimal('0')
         assert result.deferred_collected == Decimal('0')
 
