@@ -28,105 +28,175 @@ For internal service-to-service calls from `finalis-api`, use **direct Lambda in
 | **Staging** | `finalis-engine-staging` |
 | **Production** | `finalis-engine-prod` |
 
-### Python Example (boto3)
+### TypeScript Example (AWS SDK v3)
 
-```python
-import json
-import boto3
+```typescript
+import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 
-# Initialize Lambda client
-lambda_client = boto3.client('lambda', region_name='us-east-1')
+// Initialize Lambda client (reuse across requests)
+const lambdaClient = new LambdaClient({ region: 'us-east-1' });
 
-def invoke_engine(payload: dict, environment: str = 'staging') -> dict:
-    """
-    Invoke the Finalis Engine Lambda directly.
-    
-    Args:
-        payload: Dict with 'contract', 'state', and 'deal' keys
-        environment: 'staging' or 'prod'
-    
-    Returns:
-        Processed deal result dict
-    """
-    function_name = f'finalis-engine-{environment}'
-    
-    # Wrap payload in API Gateway-like event structure
-    event = {
-        'httpMethod': 'POST',
-        'path': '/process_deal',
-        'body': json.dumps(payload)
-    }
-    
-    response = lambda_client.invoke(
-        FunctionName=function_name,
-        InvocationType='RequestResponse',  # Synchronous
-        Payload=json.dumps(event)
-    )
-    
-    # Parse response
-    response_payload = json.loads(response['Payload'].read())
-    
-    if response_payload.get('statusCode') != 200:
-        raise Exception(f"Engine error: {response_payload.get('body')}")
-    
-    return json.loads(response_payload['body'])
+// Types for the engine request/response
+interface EngineContract {
+  rate_type: 'fixed' | 'lehman';
+  fixed_rate?: number;
+  accumulated_success_fees_before_this_deal: number;
+  contract_start_date: string;
+  is_pay_as_you_go: boolean;
+  lehman_tiers?: Array<{ lower_bound: number; upper_bound: number | null; rate: number }>;
+  annual_subscription?: number;
+  cost_cap_amount?: number;
+  cost_cap_scope?: 'annual' | 'total';
+}
 
+interface EngineState {
+  current_credit: number;
+  current_debt: number;
+  is_in_commissions_mode: boolean;
+  total_paid_this_contract_year: number;
+  total_paid_all_time: number;
+  future_subscription_fees: Array<{ due_date: string; amount_due: number; amount_paid: number }>;
+  deferred_schedule: Array<{ year: number; amount: number }>;
+  payg_commissions_accumulated?: number;
+}
 
-# Usage example
-result = invoke_engine({
-    'contract': {
-        'rate_type': 'fixed',
-        'fixed_rate': 0.03,
-        'accumulated_success_fees_before_this_deal': 0,
-        'contract_start_date': '2025-01-01',
-        'is_pay_as_you_go': False,
+interface EngineDeal {
+  deal_name: string;
+  success_fees: number;
+  deal_date: string;
+  is_distribution_fee_true: boolean;
+  is_sourcing_fee_true: boolean;
+  is_deal_exempt: boolean;
+  has_finra_fee?: boolean;
+  external_retainer?: number;
+  has_external_retainer?: boolean;
+  include_retainer_in_fees?: boolean;
+  has_preferred_rate?: boolean;
+  preferred_rate?: number;
+}
+
+interface EnginePayload {
+  contract: EngineContract;
+  state: EngineState;
+  deal: EngineDeal;
+}
+
+interface EngineResult {
+  deal_summary: Record<string, unknown>;
+  calculations: {
+    finalis_commission: number;
+    net_payout: number;
+    finra_fee: number;
+    distribution_fee: number;
+    sourcing_fee: number;
+    implied_cost: number;
+    [key: string]: unknown;
+  };
+  state_changes: Record<string, unknown>;
+  updated_contract_state: EngineState;
+  payg_tracking?: Record<string, unknown>;
+}
+
+/**
+ * Invoke the Finalis Engine Lambda directly.
+ */
+async function invokeEngine(
+  payload: EnginePayload,
+  environment: 'staging' | 'prod' = 'staging'
+): Promise<EngineResult> {
+  const functionName = `finalis-engine-${environment}`;
+
+  // Wrap payload in API Gateway-like event structure
+  const event = {
+    httpMethod: 'POST',
+    path: '/process_deal',
+    body: JSON.stringify(payload),
+  };
+
+  const command = new InvokeCommand({
+    FunctionName: functionName,
+    InvocationType: 'RequestResponse',
+    Payload: Buffer.from(JSON.stringify(event)),
+  });
+
+  const response = await lambdaClient.send(command);
+
+  // Parse response
+  const responsePayload = JSON.parse(
+    Buffer.from(response.Payload!).toString('utf-8')
+  );
+
+  if (responsePayload.statusCode !== 200) {
+    throw new Error(`Engine error: ${responsePayload.body}`);
+  }
+
+  return JSON.parse(responsePayload.body) as EngineResult;
+}
+
+// Usage example
+async function processDeal() {
+  const result = await invokeEngine({
+    contract: {
+      rate_type: 'fixed',
+      fixed_rate: 0.03,
+      accumulated_success_fees_before_this_deal: 0,
+      contract_start_date: '2025-01-01',
+      is_pay_as_you_go: false,
     },
-    'state': {
-        'current_credit': 0,
-        'current_debt': 0,
-        'is_in_commissions_mode': True,
-        'total_paid_this_contract_year': 0,
-        'total_paid_all_time': 0,
-        'future_subscription_fees': [],
-        'deferred_schedule': [],
+    state: {
+      current_credit: 0,
+      current_debt: 0,
+      is_in_commissions_mode: true,
+      total_paid_this_contract_year: 0,
+      total_paid_all_time: 0,
+      future_subscription_fees: [],
+      deferred_schedule: [],
     },
-    'deal': {
-        'deal_name': 'Test Deal',
-        'success_fees': 1000000,
-        'deal_date': '2025-06-15',
-        'is_distribution_fee_true': False,
-        'is_sourcing_fee_true': False,
-        'is_deal_exempt': False,
-        'has_finra_fee': True,
-        'external_retainer': 0,
-        'has_external_retainer': False,
-        'include_retainer_in_fees': False,
-    }
-}, environment='staging')
+    deal: {
+      deal_name: 'Test Deal',
+      success_fees: 1000000,
+      deal_date: '2025-06-15',
+      is_distribution_fee_true: false,
+      is_sourcing_fee_true: false,
+      is_deal_exempt: false,
+      has_finra_fee: true,
+      external_retainer: 0,
+      has_external_retainer: false,
+      include_retainer_in_fees: false,
+    },
+  }, 'staging');
 
-print(result['calculations']['finalis_commission'])
+  console.log('Commission:', result.calculations.finalis_commission);
+  console.log('Net Payout:', result.calculations.net_payout);
+}
 ```
 
 ### Health Check via Lambda
 
-```python
-def check_engine_health(environment: str = 'staging') -> dict:
-    """Check if the engine Lambda is healthy."""
-    function_name = f'finalis-engine-{environment}'
-    
-    event = {
-        'httpMethod': 'GET',
-        'path': '/health'
-    }
-    
-    response = lambda_client.invoke(
-        FunctionName=function_name,
-        InvocationType='RequestResponse',
-        Payload=json.dumps(event)
-    )
-    
-    response_payload = json.loads(response['Payload'].read())
-    return json.loads(response_payload['body'])
+```typescript
+async function checkEngineHealth(
+  environment: 'staging' | 'prod' = 'staging'
+): Promise<{ status: string; environment: string }> {
+  const functionName = `finalis-engine-${environment}`;
+
+  const event = {
+    httpMethod: 'GET',
+    path: '/health',
+  };
+
+  const command = new InvokeCommand({
+    FunctionName: functionName,
+    InvocationType: 'RequestResponse',
+    Payload: Buffer.from(JSON.stringify(event)),
+  });
+
+  const response = await lambdaClient.send(command);
+  const responsePayload = JSON.parse(
+    Buffer.from(response.Payload!).toString('utf-8')
+  );
+
+  return JSON.parse(responsePayload.body);
+}
 ```
 
 ### IAM Permissions Required
@@ -151,22 +221,24 @@ The calling service (finalis-api) needs `lambda:InvokeFunction` permission:
 
 ### Error Handling
 
-```python
-from botocore.exceptions import ClientError
+```typescript
+import { ResourceNotFoundException, ServiceException } from '@aws-sdk/client-lambda';
 
-try:
-    result = invoke_engine(payload)
-except ClientError as e:
-    if e.response['Error']['Code'] == 'ResourceNotFoundException':
-        # Lambda function doesn't exist
-        pass
-    elif e.response['Error']['Code'] == 'AccessDeniedException':
-        # Missing IAM permissions
-        pass
-    raise
-except Exception as e:
-    # Engine returned non-200 status
-    pass
+try {
+  const result = await invokeEngine(payload);
+} catch (error) {
+  if (error instanceof ResourceNotFoundException) {
+    // Lambda function doesn't exist
+    console.error('Lambda function not found');
+  } else if (error instanceof ServiceException) {
+    // AWS service error (permissions, throttling, etc.)
+    console.error('AWS error:', error.message);
+  } else if (error instanceof Error && error.message.startsWith('Engine error:')) {
+    // Engine returned non-200 status (validation error, etc.)
+    console.error('Engine error:', error.message);
+  }
+  throw error;
+}
 ```
 
 ### Performance Considerations
@@ -177,7 +249,7 @@ except Exception as e:
 | **API Gateway** | ~100-200ms | External clients, webhooks |
 
 For high-throughput scenarios, consider:
-- Reusing the boto3 client (don't create per-request)
+- Reusing the LambdaClient instance (don't create per-request)
 - Using async invocation for fire-and-forget scenarios
 
 ---
