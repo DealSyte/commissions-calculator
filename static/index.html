@@ -1038,8 +1038,8 @@
             
             // Clear PAYG fields when unchecked
             if (!isPayg) {
-                document.getElementById('annual_subscription').value = '0';
-                document.getElementById('payg_commissions_accumulated').value = '0';
+                document.getElementById('annual_subscription').value = 0;
+                document.getElementById('payg_commissions_accumulated').value = 0;
             }
         }
 
@@ -1098,7 +1098,7 @@
 
         function getLehmanTiers() {
             const entries = document.querySelectorAll('.lehman-tier-entry');
-            const tiers = Array.from(entries).map(entry => {
+            return Array.from(entries).map(entry => {
                 const lower = parseFloat(entry.querySelector('.tier-lower').value) || 0;
                 const upperVal = entry.querySelector('.tier-upper').value;
                 const upper = upperVal === '' ? null : parseFloat(upperVal);
@@ -1109,19 +1109,6 @@
                     rate: rate
                 };
             });
-            
-            // Auto-add .01 gap between tiers to prevent overlap
-            // If tier N upper_bound equals tier N+1 lower_bound, add $0.01 to lower_bound
-            for (let i = 1; i < tiers.length; i++) {
-                const prevUpper = tiers[i - 1].upper_bound;
-                const currLower = tiers[i].lower_bound;
-                // Use small epsilon for float comparison (0.001 = $0.001, way smaller than our $0.01 gap)
-                if (prevUpper !== null && Math.abs(currLower - prevUpper) < 0.001) {
-                    tiers[i].lower_bound = prevUpper + 0.01;
-                }
-            }
-            
-            return tiers;
         }
 
         function displayResults(data) {
@@ -1201,7 +1188,7 @@
                     total_paid_all_time: parseFloat(document.getElementById('total_paid_all_time').value) || 0,
                     future_subscription_fees: getSubscriptionFees(),
                     deferred_schedule: [],
-                    payg_commissions_accumulated: isPayg ? parseFloat(document.getElementById('payg_commissions_accumulated').value) || 0 : 0
+                    payg_commissions_accumulated: isPayg ? parseFloat(document.getElementById('payg_commissions_accumulated').value) || 0 : undefined
                 },
                 deal: {
                     deal_name: document.getElementById('deal_name').value,
@@ -1230,6 +1217,11 @@
             }
             if (payload.contract.annual_subscription === undefined) {
                 delete payload.contract.annual_subscription;
+            }
+            
+            // Remove undefined state fields
+            if (payload.state.payg_commissions_accumulated === undefined) {
+                delete payload.state.payg_commissions_accumulated;
             }
 
             try {
