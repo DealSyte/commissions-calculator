@@ -1,5 +1,5 @@
 # Local development dependencies (Flask for web UI testing)
 # For Lambda deployment, use requirements-lambda.txt (no dependencies needed)
-flask==3.1.0
+flask==3.1.1
 flask-cors==5.0.0
 pytest==9.0.2
