@@ -2,4 +2,4 @@
 # For Lambda deployment, use requirements-lambda.txt (no dependencies needed)
 flask==3.1.0
 flask-cors==5.0.0
-pytest==9.0.2
+pytest==9.0.3
